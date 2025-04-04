@@ -106,7 +106,7 @@
                                                         data-bs-toggle="modal" 
                                                         data-bs-target="#reviewModal"
                                                         data-order-id="{{ $order->id }}"
-                                                        data-product-id="{{ $reviewedProduct->product_id }}">
+                                                        data-product-id="{{ $reviewedProduct->id }}">
                                                     <i class="fas fa-edit me-1"></i> Edit Review
                                                 </button>
                                             @elseif($unreviewedProduct)
@@ -114,7 +114,7 @@
                                                         data-bs-toggle="modal" 
                                                         data-bs-target="#reviewModal"
                                                         data-order-id="{{ $order->id }}"
-                                                        data-product-id="{{ $unreviewedProduct->product_id }}">
+                                                        data-product-id="{{ $unreviewedProduct->id }}">
                                                     <i class="fas fa-star me-1"></i> Review
                                                 </button>
                                             @else
@@ -223,9 +223,6 @@
         </div>
     </div>
 </div>
-
-<!-- Bootstrap JS Bundle with Popper -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <style>
     .rating-stars {

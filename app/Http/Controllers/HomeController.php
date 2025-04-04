@@ -12,10 +12,10 @@ class HomeController extends Controller
      */
     public function index()
     {
-        $product = Product::with(['supplier', 'images'])
+        $products = Product::with(['supplier', 'images'])
             ->latest()
             ->paginate(10);
 
-        return view('home', compact('product'));
+        return view('home', compact('products')); // Change 'product' to 'products'
     }
 }

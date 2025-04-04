@@ -13,8 +13,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('full_name')->nullable();
-            $table->string('profile_image')->nullable(); // Changed 'avatar' to 'profile_image'
+            
             $table->integer('age')->nullable();
             $table->enum('sex', ['Male', 'Female', 'Other'])->nullable();
             $table->string('contact_number')->nullable();

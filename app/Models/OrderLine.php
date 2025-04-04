@@ -9,6 +9,9 @@ class OrderLine extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = 'id';
+    protected $table = 'order_lines';
+
     protected $fillable = [
         'order_id',
         'product_id',
@@ -22,7 +25,7 @@ class OrderLine extends Model
 
     public function order()
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Order::class, 'order_id');
     }
 
     public function product()
@@ -30,5 +33,44 @@ class OrderLine extends Model
         return $this->belongsTo(Product::class, 'product_id', 'product_id');
     }
 
-    // ... rest of your methods ...
+    public function getSubtotalAttribute()
+    {
+        return $this->quantity * $this->sell_price;
+    }
+
+    public function getFormattedSubtotalAttribute()
+    {
+        return '$' . number_format($this->subtotal, 2);
+    }
+
+    public function getFormattedPriceAttribute()
+    {
+        return '$' . number_format($this->sell_price, 2);
+    }
+
+    public function scopeForOrder($query, $orderId)
+    {
+        return $query->where('order_id', $orderId);
+    }
+
+    public function scopeWithProductDetails($query)
+    {
+        return $query->with(['product' => function($q) {
+            $q->with('images');
+        }]);
+    }
+
+    public function updateQuantity($newQuantity)
+    {
+        if ($newQuantity <= 0) {
+            throw new \InvalidArgumentException("Quantity must be greater than zero");
+        }
+
+        $this->update(['quantity' => $newQuantity]);
+        
+        // Update the order total
+        $this->order->update([
+            'total_amount' => $this->order->orderLines->sum('subtotal')
+        ]);
+    }
 }

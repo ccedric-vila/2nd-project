@@ -14,6 +14,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\CheckoutController;
 
 Route::get('/', function () {
     return view('landing');
@@ -85,6 +86,19 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/orders/history', [OrderController::class, 'history'])->name('orders.history');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
+    
+    // Buy Now button route (POST)
+    Route::post('/checkout/single', [CheckoutController::class, 'handleSingleCheckout'])->name('checkout.handle-single');
+
+    // Single product checkout page (GET)
+    Route::get('/checkout/{product}', [CheckoutController::class, 'single'])->name('checkout.single');
+
+    // Process checkout
+    Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+
+    // Order success page
+    Route::get('/checkout/success/{order_id}', [CheckoutController::class, 'success'])->name('checkout.success');
+    
     // Reviews
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::get('/reviews/check', [ReviewController::class, 'check'])->name('reviews.check');

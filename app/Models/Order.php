@@ -14,6 +14,9 @@ class Order extends Model
     const STATUS_ACCEPTED = 'accepted';
     const STATUS_CANCELLED = 'cancelled';
 
+    protected $primaryKey = 'id';
+    protected $table = 'orders';
+
     protected $fillable = [
         'user_id',
         'total_amount',
@@ -22,12 +25,12 @@ class Order extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function orderLines()
     {
-        return $this->hasMany(OrderLine::class);
+        return $this->hasMany(OrderLine::class, 'order_id');
     }
 
     public function isPending()
@@ -60,7 +63,7 @@ class Order extends Model
                 if ($product && $product->stock >= $orderLine->quantity) {
                     $product->decrement('stock', $orderLine->quantity);
                 } else {
-                    throw new \Exception("Insufficient stock for product: {$product->name}");
+                    throw new \Exception("Insufficient stock for product: {$product->product_name}");
                 }
             }
         });
@@ -109,12 +112,27 @@ class Order extends Model
         return $this->hasMany(Review::class);
     }
 
-    // New method to check if order can be reviewed
     public function canBeReviewed()
     {
         return $this->status === self::STATUS_ACCEPTED && 
                $this->orderLines->contains(function($line) {
                    return !$line->product->reviews->where('user_id', auth()->id())->count();
                });
+    }
+
+    // New method to get formatted order date
+    public function getFormattedDateAttribute()
+    {
+        return $this->created_at->format('M d, Y');
+    }
+
+    // New method to get order status badge class
+    public function getStatusBadgeClassAttribute()
+    {
+        return [
+            self::STATUS_PENDING => 'bg-warning',
+            self::STATUS_ACCEPTED => 'bg-success',
+            self::STATUS_CANCELLED => 'bg-danger',
+        ][$this->status] ?? 'bg-secondary';
     }
 }
