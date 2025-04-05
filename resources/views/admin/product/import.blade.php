@@ -29,39 +29,97 @@
         </div>
 
         <div class="card-body">
-            <!-- Status Messages -->
-            @if (session('success'))
-                <div class="alert alert-success alert-dismissible fade show">
-                    <i class="fas fa-check-circle mr-2"></i>
-                    {{ session('success') }}
-                    <button type="button" class="close" data-dismiss="alert">
-                        <span>&times;</span>
-                    </button>
+            <!-- Processing Alert (shown during submission) -->
+            <div class="alert alert-info alert-dismissible fade show alert-processing" style="display: none;">
+                <i class="fas fa-spinner fa-spin mr-2"></i>
+                Your import is being processed. This may take a few moments...
+            </div>
+
+            
+            @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle fa-2x mr-3"></i>
+                    <div>
+                        <h5 class="alert-heading mb-1">Import Summary</h5>
+                        <p>{{ session('success') }}</p>
+                        @if(session('stats'))
+                        <div class="small">
+                            <span class="badge bg-primary">Processed: {{ session('stats.processed') }}</span>
+                            <span class="badge bg-success">Imported: {{ session('stats.imported') }}</span>
+                            <span class="badge bg-warning text-dark">Skipped: {{ session('stats.skipped') }}</span>
+                        </div>
+                        @endif
+                    </div>
                 </div>
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
             @endif
 
-            @if (session('errors'))
-                <div class="alert alert-danger alert-dismissible fade show">
-                    <h5 class="alert-heading"><i class="fas fa-exclamation-triangle mr-2"></i>Import Errors</h5>
-                    <ul class="mb-0">
-                        @foreach (session('errors') as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                    <button type="button" class="close" data-dismiss="alert">
-                        <span>&times;</span>
-                    </button>
+            {{-- Skipped Rows --}}
+            @if(session('skipped_rows_details'))
+            <div class="alert alert-warning">
+                <h5><i class="fas fa-exclamation-triangle"></i> Skipped Rows Details</h5>
+                <div class="table-responsive mt-3">
+                    <table class="table table-sm table-bordered">
+                        <thead class="bg-warning">
+                            <tr>
+                                <th>Row #</th>
+                                <th>Product</th>
+                                <th>Issue</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach(session('skipped_rows_details') as $row)
+                            <tr>
+                                <td>{{ $row['row'] }}</td>
+                                <td>{{ $row['product_name'] }}</td>
+                                <td>{{ $row['errors'] }}</td>
+                                <td>{{ $row['category'] }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
+            </div>
             @endif
 
-            @if ($errors->any()))
-                <div class="alert alert-danger alert-dismissible fade show">
-                    <h5 class="alert-heading"><i class="fas fa-exclamation-triangle mr-2"></i>Validation Errors</h5>
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+            {{-- Validation Errors --}}
+            @if(session('import_errors'))
+            <div class="alert alert-danger">
+                <h5><i class="fas fa-times-circle"></i> Validation Errors</h5>
+                <ul class="mb-0">
+                    @foreach(session('import_errors') as $row => $errors)
+                    <li>
+                        <strong>Row {{ $row }}:</strong>
+                        <ul>
+                            @foreach($errors as $error)
+                            <li>{{ $error['field'] }} ({{ $error['value'] }}): {{ implode(', ', $error['errors']) }}</li>
+                            @endforeach
+                        </ul>
+                    </li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+
+            <!-- Import Errors -->
+            @if (session('import_errors'))
+                <div class="alert alert-danger alert-dismissible fade show mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-times-circle fa-2x mr-3 text-danger"></i>
+                        <div>
+                            <h5 class="alert-heading mb-2">Import Errors</h5>
+                            <ul class="mb-0 pl-3">
+                                @foreach (session('import_errors') as $error)
+                                <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
                     <button type="button" class="close" data-dismiss="alert">
                         <span>&times;</span>
                     </button>
@@ -78,7 +136,8 @@
                         <select class="form-control select2" id="supplier_id" name="supplier_id" required>
                             <option value="">-- Select Supplier --</option>
                             @foreach($suppliers as $supplier)
-                                <option value="{{ $supplier->id }}" @if(old('supplier_id') == $supplier->id) selected @endif>
+                                <option value="{{ $supplier->supplier_id }}" 
+                                        @selected(old('supplier_id') == $supplier->supplier_id)>
                                     {{ $supplier->brand_name }}
                                 </option>
                             @endforeach
@@ -226,9 +285,21 @@
 
         // Form submission handling
         $('#importForm').on('submit', function() {
-            $('#submitBtn').prop('disabled', true)
+            // Show processing alert
+            $('.alert-processing').fadeIn();
+            
+            // Disable submit button
+            $('#submitBtn')
+                .prop('disabled', true)
                 .html('<i class="fas fa-spinner fa-spin mr-2"></i> Importing...');
         });
+
+        // Auto-expand error sections if they exist
+        @if (session('import_errors') || $errors->any())
+            $(window).on('load', function() {
+                $('#instructionsCollapse').collapse('show');
+            });
+        @endif
     });
 </script>
 @endsection
@@ -247,6 +318,20 @@
     }
     #instructionsCollapse {
         transition: all 0.3s ease;
+    }
+    .alert .fa-2x {
+        margin-top: -0.25rem;
+        margin-bottom: -0.25rem;
+    }
+    pre {
+        background-color: #f8f9fa;
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        margin-bottom: 0;
+        white-space: pre-wrap;
+    }
+    .alert-processing {
+        border-left: 4px solid #17a2b8;
     }
 </style>
 @endsection

@@ -27,40 +27,97 @@
         </div>
 
         <div class="card-body">
-            <!-- Status Messages -->
+            <!-- Processing Alert (shown during submission) -->
+            <div class="alert alert-info alert-dismissible fade show alert-processing" style="display: none;">
+                <i class="fas fa-spinner fa-spin mr-2"></i>
+                Your import is being processed. This may take a few moments...
+            </div>
+
+            
             <?php if(session('success')): ?>
-                <div class="alert alert-success alert-dismissible fade show">
-                    <i class="fas fa-check-circle mr-2"></i>
-                    <?php echo e(session('success')); ?>
-
-                    <button type="button" class="close" data-dismiss="alert">
-                        <span>&times;</span>
-                    </button>
+            <div class="alert alert-success alert-dismissible fade show">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle fa-2x mr-3"></i>
+                    <div>
+                        <h5 class="alert-heading mb-1">Import Summary</h5>
+                        <p><?php echo e(session('success')); ?></p>
+                        <?php if(session('stats')): ?>
+                        <div class="small">
+                            <span class="badge bg-primary">Processed: <?php echo e(session('stats.processed')); ?></span>
+                            <span class="badge bg-success">Imported: <?php echo e(session('stats.imported')); ?></span>
+                            <span class="badge bg-warning text-dark">Skipped: <?php echo e(session('stats.skipped')); ?></span>
+                        </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
             <?php endif; ?>
 
-            <?php if(session('errors')): ?>
-                <div class="alert alert-danger alert-dismissible fade show">
-                    <h5 class="alert-heading"><i class="fas fa-exclamation-triangle mr-2"></i>Import Errors</h5>
-                    <ul class="mb-0">
-                        <?php $__currentLoopData = session('errors'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <li><?php echo e($error); ?></li>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                    </ul>
-                    <button type="button" class="close" data-dismiss="alert">
-                        <span>&times;</span>
-                    </button>
+            
+            <?php if(session('skipped_rows_details')): ?>
+            <div class="alert alert-warning">
+                <h5><i class="fas fa-exclamation-triangle"></i> Skipped Rows Details</h5>
+                <div class="table-responsive mt-3">
+                    <table class="table table-sm table-bordered">
+                        <thead class="bg-warning">
+                            <tr>
+                                <th>Row #</th>
+                                <th>Product</th>
+                                <th>Issue</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php $__currentLoopData = session('skipped_rows_details'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <tr>
+                                <td><?php echo e($row['row']); ?></td>
+                                <td><?php echo e($row['product_name']); ?></td>
+                                <td><?php echo e($row['errors']); ?></td>
+                                <td><?php echo e($row['category']); ?></td>
+                            </tr>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </tbody>
+                    </table>
                 </div>
+            </div>
             <?php endif; ?>
 
-            <?php if($errors->any()): ?>)
-                <div class="alert alert-danger alert-dismissible fade show">
-                    <h5 class="alert-heading"><i class="fas fa-exclamation-triangle mr-2"></i>Validation Errors</h5>
-                    <ul class="mb-0">
-                        <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <li><?php echo e($error); ?></li>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                    </ul>
+            
+            <?php if(session('import_errors')): ?>
+            <div class="alert alert-danger">
+                <h5><i class="fas fa-times-circle"></i> Validation Errors</h5>
+                <ul class="mb-0">
+                    <?php $__currentLoopData = session('import_errors'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row => $errors): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <li>
+                        <strong>Row <?php echo e($row); ?>:</strong>
+                        <ul>
+                            <?php $__currentLoopData = $errors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <li><?php echo e($error['field']); ?> (<?php echo e($error['value']); ?>): <?php echo e(implode(', ', $error['errors'])); ?></li>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </ul>
+                    </li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </ul>
+            </div>
+            <?php endif; ?>
+
+            <!-- Import Errors -->
+            <?php if(session('import_errors')): ?>
+                <div class="alert alert-danger alert-dismissible fade show mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-times-circle fa-2x mr-3 text-danger"></i>
+                        <div>
+                            <h5 class="alert-heading mb-2">Import Errors</h5>
+                            <ul class="mb-0 pl-3">
+                                <?php $__currentLoopData = session('import_errors'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <li><?php echo e($error); ?></li>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </ul>
+                        </div>
+                    </div>
                     <button type="button" class="close" data-dismiss="alert">
                         <span>&times;</span>
                     </button>
@@ -77,7 +134,8 @@
                         <select class="form-control select2" id="supplier_id" name="supplier_id" required>
                             <option value="">-- Select Supplier --</option>
                             <?php $__currentLoopData = $suppliers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $supplier): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <option value="<?php echo e($supplier->id); ?>" <?php if(old('supplier_id') == $supplier->id): ?> selected <?php endif; ?>>
+                                <option value="<?php echo e($supplier->supplier_id); ?>" 
+                                        <?php if(old('supplier_id') == $supplier->supplier_id): echo 'selected'; endif; ?>>
                                     <?php echo e($supplier->brand_name); ?>
 
                                 </option>
@@ -226,9 +284,21 @@
 
         // Form submission handling
         $('#importForm').on('submit', function() {
-            $('#submitBtn').prop('disabled', true)
+            // Show processing alert
+            $('.alert-processing').fadeIn();
+            
+            // Disable submit button
+            $('#submitBtn')
+                .prop('disabled', true)
                 .html('<i class="fas fa-spinner fa-spin mr-2"></i> Importing...');
         });
+
+        // Auto-expand error sections if they exist
+        <?php if(session('import_errors') || $errors->any()): ?>
+            $(window).on('load', function() {
+                $('#instructionsCollapse').collapse('show');
+            });
+        <?php endif; ?>
     });
 </script>
 <?php $__env->stopSection(); ?>
@@ -247,6 +317,20 @@
     }
     #instructionsCollapse {
         transition: all 0.3s ease;
+    }
+    .alert .fa-2x {
+        margin-top: -0.25rem;
+        margin-bottom: -0.25rem;
+    }
+    pre {
+        background-color: #f8f9fa;
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        margin-bottom: 0;
+        white-space: pre-wrap;
+    }
+    .alert-processing {
+        border-left: 4px solid #17a2b8;
     }
 </style>
 <?php $__env->stopSection(); ?>

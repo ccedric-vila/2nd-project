@@ -24,4 +24,9 @@ class Supplier extends Model
     {
         return $this->hasMany(Product::class, 'supplier_id', 'supplier_id');
     }
+
+    public function scopeActive($query)
+{
+    return $query->where('is_active', true); // assuming you have an is_active column
+}
 }
