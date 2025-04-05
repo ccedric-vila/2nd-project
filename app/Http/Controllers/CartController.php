@@ -86,38 +86,37 @@ class CartController extends Controller
         return back()->with('success', 'Cart updated successfully.');
     }
 
-    // Process checkout
     public function checkout(Request $request)
     {
         $cartItems = Cart::with('product')
                        ->where('user_id', auth()->id())
                        ->get();
-
+    
         if ($cartItems->isEmpty()) {
             return back()->with('error', 'Your cart is empty.');
         }
-
+    
         $total = $cartItems->sum(function($item) {
-            return $item->quantity * $item->product->price; // Changed from sell_price to price
+            return $item->quantity * $item->product->sell_price; // Changed to sell_price
         });
-
+    
         $order = Order::create([
             'user_id' => auth()->id(),
             'total_amount' => $total,
-            'status' => 'pending', // Changed from Order::STATUS_PENDING
+            'status' => 'pending',
         ]);
-
+    
         foreach ($cartItems as $item) {
             OrderLine::create([
                 'order_id' => $order->id,
                 'product_id' => $item->product_id,
                 'quantity' => $item->quantity,
-                'price' => $item->product->price, // Changed from sell_price to price
+                'sell_price' => $item->product->sell_price, // Changed to sell_price
             ]);
         }
-
+    
         Cart::where('user_id', auth()->id())->delete();
-
+    
         return redirect()->route('cart.index')->with('success', 'Order placed successfully!');
     }
 }

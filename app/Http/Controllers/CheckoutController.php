@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderLine;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
@@ -27,18 +29,14 @@ class CheckoutController extends Controller
     {
         $user = Auth::user();
         
-        // Ensure we have default values if fields are null
-        $contact_number = $user->contact_number ?? '';
-        $address = $user->address ?? '';
-        
         return view('checkout.single', [
             'product' => $product->load('images'),
-            'contact_number' => $contact_number,
-            'address' => $address
+            'contact_number' => $user->contact_number ?? '',
+            'address' => $user->address ?? ''
         ]);
     }
 
-    // Process the checkout
+    // Process the checkout and show success
     public function process(Request $request)
     {
         $validated = $request->validate([
@@ -49,60 +47,56 @@ class CheckoutController extends Controller
             'address' => 'required|string|max:255'
         ]);
 
-        $product = Product::findOrFail($request->product_id);
+        try {
+            DB::beginTransaction();
 
-        // Verify stock is available
-        if ($product->stock < $request->quantity) {
-            return back()->withErrors(['quantity' => 'Insufficient stock available'])->withInput();
+            $product = Product::where('product_id', $validated['product_id'])
+                        ->lockForUpdate()
+                        ->firstOrFail();
+
+            // Stock check remains to prevent overselling at checkout
+            if ($product->stock < $validated['quantity']) {
+                DB::rollBack();
+                return back()->withErrors(['quantity' => 'Only '.$product->stock.' items available'])->withInput();
+            }
+
+            $order = Order::create([
+                'user_id' => Auth::id(),
+                'total_amount' => $product->sell_price * $validated['quantity'],
+                'status' => 'pending',
+                'shipping_address' => $validated['address'],
+                'contact_number' => $validated['contact_number'],
+                'customer_name' => Auth::user()->name,
+                'size' => $validated['size']
+            ]);
+
+            OrderLine::create([
+                'order_id' => $order->id,
+                'product_id' => $product->product_id,
+                'quantity' => $validated['quantity'],
+                'sell_price' => $product->sell_price,
+                'total_price' => $product->sell_price * $validated['quantity'],
+                'size' => $validated['size']
+            ]);
+
+            // Removed stock deduction here - will be handled when admin accepts order
+
+            Auth::user()->update([
+                'contact_number' => $validated['contact_number'],
+                'address' => $validated['address']
+            ]);
+
+            DB::commit();
+
+            return back()->with([
+                'success' => 'Order placed successfully! Your order ID is: '.$order->id,
+                'order_id' => $order->id
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Checkout failed: '.$e->getMessage());
+            return back()->with('error', 'An error occurred during checkout. Please try again.');
         }
-
-        // Create order
-        $order = Order::create([
-            'user_id' => Auth::id(),
-            'total_amount' => $product->sell_price * $request->quantity,
-            'status' => 'pending',
-            'shipping_address' => $request->address,
-            'contact_number' => $request->contact_number,
-            'customer_name' => Auth::user()->name
-        ]);
-
-        // Create order line with size information
-        $orderLine = OrderLine::create([
-            'order_id' => $order->id,
-            'product_id' => $product->product_id,
-            'quantity' => $request->quantity,
-            'unit_price' => $product->sell_price,
-            'total_price' => $product->sell_price * $request->quantity,
-            'size' => $request->size
-        ]);
-
-        // Update product stock
-        $product->decrement('stock', $request->quantity);
-
-        // Update user's contact information
-        $user = Auth::user();
-        $user->update([
-            'contact_number' => $request->contact_number,
-            'address' => $request->address
-        ]);
-
-        return redirect()->route('checkout.success', ['order_id' => $order->id]);
-    }
-
-    // Show success page
-    public function success(Request $request)
-    {
-        $order = Order::with(['orderLines.product'])
-                   ->findOrFail($request->order_id);
-
-        // Verify the order belongs to the authenticated user
-        if ($order->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        return view('checkout.success', [
-            'order' => $order,
-            'status_message' => 'Your order is pending admin approval'
-        ]);
     }
 }

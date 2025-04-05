@@ -71,8 +71,7 @@
                     <form action="{{ route('checkout.process') }}" method="POST" class="needs-validation" novalidate>
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->product_id }}">
-                        <input type="hidden" name="price_per_item" value="{{ $product->sell_price }}">
-                        <input type="hidden" name="size" value="{{ $product->size }}">
+                        <input type="hidden" id="unit-price" value="{{ $product->sell_price }}">
 
                         <div class="row g-3">
                             <!-- Shipping Information -->
@@ -85,18 +84,18 @@
                                         <div class="mb-3">
                                             <label for="fullName" class="form-label">Full Name</label>
                                             <input type="text" class="form-control" id="fullName" 
-                                                   value="{{ Auth::user()->name }}" readonly>
+                                                value="{{ Auth::user()->name }}" readonly>
                                         </div>
                                         <div class="mb-3">
                                             <label for="contactNumber" class="form-label">Contact Number *</label>
                                             <input type="text" class="form-control" id="contactNumber" 
-                                                   name="contact_number" value="{{ Auth::user()->contact_number ?? '' }}" required>
+                                                name="contact_number" value="{{ Auth::user()->contact_number ?? '' }}" required>
                                             <div class="invalid-feedback">Please provide a valid contact number</div>
                                         </div>
                                         <div class="mb-3">
                                             <label for="shippingAddress" class="form-label">Shipping Address *</label>
                                             <textarea class="form-control" id="shippingAddress" 
-                                                      name="address" rows="3" required>{{ Auth::user()->address ?? '' }}</textarea>
+                                                    name="address" rows="3" required>{{ Auth::user()->address ?? '' }}</textarea>
                                             <div class="invalid-feedback">Please provide your shipping address</div>
                                         </div>
                                     </div>
@@ -113,12 +112,20 @@
                                         <div class="mb-3">
                                             <label for="quantity" class="form-label">Quantity *</label>
                                             <input type="number" class="form-control" id="quantity" 
-                                                   name="quantity" min="1" max="{{ $product->stock }}" value="1" required>
+                                                name="quantity" min="1" max="{{ $product->stock }}" value="1" required>
                                             <div class="invalid-feedback">Please select a valid quantity (1-{{ $product->stock }})</div>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Selected Size</label>
-                                            <input type="text" class="form-control" value="{{ $product->size }}" readonly>
+                                            <select class="form-select" name="size" required>
+                                                <option value="XS" {{ $product->size == 'XS' ? 'selected' : '' }}>XS</option>
+                                                <option value="S" {{ $product->size == 'S' ? 'selected' : '' }}>S</option>
+                                                <option value="M" {{ $product->size == 'M' ? 'selected' : '' }}>M</option>
+                                                <option value="L" {{ $product->size == 'L' ? 'selected' : '' }}>L</option>
+                                                <option value="XL" {{ $product->size == 'XL' ? 'selected' : '' }}>XL</option>
+                                                <option value="XXL" {{ $product->size == 'XXL' ? 'selected' : '' }}>XXL</option>
+                                            </select>
+                                            <div class="invalid-feedback">Please select a size</div>
                                         </div>
                                     </div>
                                 </div>
@@ -145,11 +152,6 @@
                                         <button type="submit" class="btn btn-primary w-100 mt-3 py-2">
                                             <i class="fas fa-lock me-2"></i> Complete Secure Payment
                                         </button>
-                                        <div class="text-center mt-2">
-                                            <small class="text-muted">
-                                                <i class="fas fa-shield-alt me-1"></i> Secure SSL Encryption
-                                            </small>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -197,7 +199,8 @@
         const quantityInput = document.getElementById('quantity');
         const quantityDisplay = document.getElementById('quantity-display');
         const totalPriceElement = document.getElementById('total-price');
-        const unitPrice = parseFloat("{{ $product->sell_price }}");
+        const displayPriceElement = document.getElementById('display-price');
+        const unitPrice = parseFloat(document.getElementById('unit-price').value);
         const maxStock = parseInt("{{ $product->stock }}");
 
         function updateTotals() {
@@ -213,8 +216,13 @@
             
             // Update displays
             quantityDisplay.textContent = quantity;
-            totalPriceElement.textContent = (quantity * unitPrice).toFixed(2);
+            const totalPrice = (quantity * unitPrice).toFixed(2);
+            totalPriceElement.textContent = totalPrice;
+            displayPriceElement.textContent = unitPrice.toFixed(2);
         }
+
+        // Initial update
+        updateTotals();
 
         // Update when quantity changes
         quantityInput.addEventListener('input', updateTotals);

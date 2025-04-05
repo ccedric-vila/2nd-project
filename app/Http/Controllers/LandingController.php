@@ -2,12 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Product;
 
 class LandingController extends Controller
 {
     public function index()
     {
-        return view('landing');
+        $product = Product::with(['supplier', 'images', 'reviews'])
+            ->orderBy('created_at', 'desc')
+            ->take(8) // Show 8 featured products
+            ->get();
+            
+        return view('landing', compact('product'));
     }
 }

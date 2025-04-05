@@ -106,7 +106,10 @@
                                                         data-bs-toggle="modal" 
                                                         data-bs-target="#reviewModal"
                                                         data-order-id="{{ $order->id }}"
-                                                        data-product-id="{{ $reviewedProduct->id }}">
+                                                        data-product-id="{{ $reviewedProduct->product_id }}"
+                                                        data-product-name="{{ $reviewedProduct->name }}"
+                                                        data-product-image="{{ $reviewedProduct->image_url }}"
+                                                        data-product-category="{{ $reviewedProduct->category->name ?? 'N/A' }}">
                                                     <i class="fas fa-edit me-1"></i> Edit Review
                                                 </button>
                                             @elseif($unreviewedProduct)
@@ -114,7 +117,10 @@
                                                         data-bs-toggle="modal" 
                                                         data-bs-target="#reviewModal"
                                                         data-order-id="{{ $order->id }}"
-                                                        data-product-id="{{ $unreviewedProduct->id }}">
+                                                        data-product-id="{{ $unreviewedProduct->product_id }}"
+                                                        data-product-name="{{ $unreviewedProduct->name }}"
+                                                        data-product-image="{{ $unreviewedProduct->image_url }}"
+                                                        data-product-category="{{ $unreviewedProduct->category->name ?? 'N/A' }}">
                                                     <i class="fas fa-star me-1"></i> Review
                                                 </button>
                                             @else
@@ -344,15 +350,31 @@ document.addEventListener('DOMContentLoaded', function() {
         const button = event.relatedTarget;
         const orderId = button.getAttribute('data-order-id');
         const productId = button.getAttribute('data-product-id');
+        const productName = button.getAttribute('data-product-name');
+        const productImage = button.getAttribute('data-product-image');
+        const productCategory = button.getAttribute('data-product-category');
         
+        // Set form values
         document.getElementById('order_id').value = orderId;
         document.getElementById('product_id').value = productId;
         
+        // Reset form
         resetStars();
         commentInput.value = '';
         showLoading();
         
-        // Check if review already exists
+        // Set product info immediately
+        document.getElementById('product-info').innerHTML = `
+            <div class="d-flex align-items-center justify-content-center mb-3">
+                <img src="${productImage}" alt="${productName}" class="product-image me-3">
+                <div class="text-start">
+                    <h6 class="mb-1">${productName}</h6>
+                    <span class="text-muted small">${productCategory}</span>
+                </div>
+            </div>
+        `;
+        
+        // Check if review exists
         fetch(`/reviews/check?order_id=${orderId}&product_id=${productId}`, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -363,32 +385,6 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             showForm();
             
-            // Fetch product details for the modal
-            fetch(`/products/${productId}/info`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(productData => {
-                if (productData.success) {
-                    document.getElementById('product-info').innerHTML = `
-                        <div class="d-flex align-items-center justify-content-center mb-3">
-                            <img src="${productData.product.image}" alt="${productData.product.name}" class="product-image me-3">
-                            <div class="text-start">
-                                <h6 class="mb-1">${productData.product.name}</h6>
-                                <span class="text-muted small">${productData.product.category}</span>
-                            </div>
-                        </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching product info:', error);
-            });
-            
-            // If review exists, prefill form
             if (data.review) {
                 setRating(data.review.rating);
                 commentInput.value = data.review.comment || '';
@@ -437,21 +433,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Retry button event
-    document.getElementById('retry-button')?.addEventListener('click', function() {
-        showForm();
-    });
-    
-    // Character count for comment
-    commentInput.addEventListener('input', function() {
-        if (this.value.length > 1000) {
-            this.value = this.value.substring(0, 1000);
-        }
-    });
-    
     // Form submission
     reviewForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        
+        // Validate product_id presence
+        const productId = document.getElementById('product_id').value;
+        if (!productId) {
+            showError('Product ID is missing. Please refresh and try again.');
+            return;
+        }
         
         // Rating validation
         if (ratingInput.value === "0") {
@@ -468,24 +459,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Comment validation
-        if (commentInput.value.length > 1000) {
-            document.getElementById('comment-error').textContent = 'Comment must be less than 1000 characters';
-            commentInput.classList.add('is-invalid');
-            return;
-        }
-        
         // Show loading state in button
         document.getElementById('submit-text').classList.add('d-none');
         document.getElementById('submit-loading').classList.remove('d-none');
         
-        // Get form data
-        const formData = new FormData(reviewForm);
-        
         // Submit via fetch API
         fetch("{{ route('reviews.store') }}", {
             method: 'POST',
-            body: formData,
+            body: new FormData(reviewForm),
             headers: {
                 'X-CSRF-TOKEN': "{{ csrf_token() }}",
                 'X-Requested-With': 'XMLHttpRequest',
@@ -497,25 +478,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 showSuccess(data.message);
                 
-                // Update button in the orders list
-                const reviewBtn = document.querySelector(`[data-order-id="${formData.get('order_id')}"][data-product-id="${formData.get('product_id')}"]`);
-                if (reviewBtn) {
-                    if (reviewBtn.classList.contains('review-btn')) {
-                        reviewBtn.outerHTML = `
-                            <button class="btn btn-sm btn-warning rounded-pill px-3 edit-review-btn" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#reviewModal"
-                                    data-order-id="${formData.get('order_id')}"
-                                    data-product-id="${formData.get('product_id')}">
-                                <i class="fas fa-edit me-1"></i> Edit Review
-                            </button>
-                        `;
-                    } else if (reviewBtn.classList.contains('edit-review-btn')) {
-                        // Just close the modal for edit actions
-                        const modal = getModalInstance(reviewModal);
-                        modal.hide();
-                    }
-                }
+                // Reload the page to update the UI
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
             } else {
                 throw new Error(data.message || 'Failed to submit review');
             }
@@ -529,6 +495,18 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('submit-text').classList.remove('d-none');
             document.getElementById('submit-loading').classList.add('d-none');
         });
+    });
+    
+    // Retry button event
+    document.getElementById('retry-button')?.addEventListener('click', function() {
+        showForm();
+    });
+    
+    // Character count for comment
+    commentInput.addEventListener('input', function() {
+        if (this.value.length > 1000) {
+            this.value = this.value.substring(0, 1000);
+        }
     });
 });
 </script>

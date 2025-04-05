@@ -3,13 +3,37 @@
 @section('content')
 <div class="container">
     <h1 class="text-center mb-4">Welcome to StyleSphere</h1>
+    
+    <!-- Search Form -->
+    <div class="container mb-4">
+        <form action="{{ route('home.search') }}" method="GET">
+            <div class="input-group">
+                <input type="text" 
+                    name="search" 
+                    class="form-control" 
+                    placeholder="Search products..."
+                    value="{{ request('search') }}">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i>
+                </button>
+                @if(request('search'))
+                    <a href="{{ route('home') }}" class="btn btn-outline-secondary">
+                        Clear
+                    </a>
+                @endif
+            </div>
+        </form>
+    </div>
 
     <div class="row">
-        @if($products->total() > 0)
+        @if(request('search') && $products->isEmpty())
+            <div class="col-12 text-center py-5">
+                <h4 class="text-muted">No products found for "{{ request('search') }}"</h4>
+            </div>
+        @elseif($products->isNotEmpty())
             @foreach ($products as $product)
                 <div class="col-md-4 mb-4">
                     <div class="card shadow-sm border-0 h-100">
-                        <!-- Product Image Carousel -->
                         @if($product->images->count() > 0)
                         <div id="productCarousel-{{ $product->id }}" class="carousel slide" data-bs-ride="carousel">
                             <div class="carousel-inner">
@@ -18,7 +42,7 @@
                                     <img src="{{ asset('storage/' . $image->image_path) }}" 
                                         class="d-block w-100 card-img-top" 
                                         style="height: 300px; object-fit: cover;" 
-                                        alt="{{ $product->name }}">
+                                        alt="{{ $product->product_name }}">
                                 </div>
                                 @endforeach
                             </div>
@@ -40,12 +64,11 @@
                         @endif
 
                         <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">{{ $product->name }}</h5>
-                            <p class="card-text"><strong>Brand:</strong> {{ $product->brand->name ?? 'No Brand' }}</p>
-                            <p class="card-text"><strong>Price:</strong> ${{ number_format($product->price, 2) }}</p>
+                            <h5 class="card-title">{{ $product->product_name }}</h5>
+                            <p class="card-text"><strong>Brand:</strong> {{ $product->supplier->brand_name ?? 'No Brand' }}</p>
+                            <p class="card-text"><strong>Price:</strong> ${{ number_format($product->sell_price, 2) }}</p>
                             <p class="card-text"><strong>Stock:</strong> {{ $product->stock }}</p>
                             
-                            <!-- Enhanced Product Rating Display -->
                             <div class="mb-3">
                                 @if($product->reviews->count() > 0)
                                     <div class="d-flex align-items-center mb-1">
@@ -67,7 +90,6 @@
                                         <span class="ms-2">{{ number_format($avgRating, 1) }} ({{ $product->reviews_count }} reviews)</span>
                                     </div>
                                     
-                                    <!-- Display top 2 reviews -->
                                     <div class="mt-2">
                                         @foreach($product->reviews->take(2) as $review)
                                             <div class="review-item mb-2 pb-2 border-bottom">
@@ -103,8 +125,6 @@
                                     </button>
                                 </form>
 
-                                    <!-- Updated Buy Now Button -->
-                                                                <!-- Buy Now button -->
                                     <form action="{{ route('checkout.handle-single') }}" method="POST" class="mb-2">
                                         @csrf
                                         <input type="hidden" name="product_id" value="{{ $product->product_id }}">
@@ -112,11 +132,9 @@
                                             <i class="fas fa-bolt me-1"></i> Buy Now
                                         </button>
                                     </form>
-
                                 </div>
                             </div>
                             
-                            <!-- View All Reviews Button -->
                             @if($product->reviews->count() > 2)
                                 <button class="btn btn-outline-secondary btn-sm w-100" data-bs-toggle="modal" data-bs-target="#reviewsModal-{{ $product->id }}">
                                     <i class="fas fa-comment me-1"></i> View All Reviews ({{ $product->reviews->count() }})
@@ -126,12 +144,11 @@
                     </div>
                 </div>
 
-                <!-- Reviews Modal for each product -->
                 <div class="modal fade" id="reviewsModal-{{ $product->id }}" tabindex="-1" aria-labelledby="reviewsModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-lg">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="reviewsModalLabel">Reviews for {{ $product->name }}</h5>
+                                <h5 class="modal-title" id="reviewsModalLabel">Reviews for {{ $product->product_name }}</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
@@ -200,7 +217,6 @@
         @endif
     </div>
 
-    <!-- Pagination -->
     @if($products->hasPages())
     <div class="d-flex justify-content-center mt-4">
         {{ $products->links() }}
@@ -213,7 +229,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Quantity input validation
     document.querySelectorAll('.quantity-input').forEach(input => {
         input.addEventListener('change', function() {
             const max = parseInt(this.getAttribute('max'));

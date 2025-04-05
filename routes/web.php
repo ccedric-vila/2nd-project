@@ -15,10 +15,13 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\LandingController;
 
-Route::get('/', function () {
-    return view('landing');
-});
+
+
+
+
+Route::get('/', [LandingController::class, 'index'])->name('welcome');
 
 // Authentication Routes
 Auth::routes(['register' => false, 'login' => false]); // Disable default auth routes
@@ -38,6 +41,8 @@ Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/', [AdminController::class, 'index'])->name('dashboard');
+
+    
 
     // Product Routes (Fixed: Now includes create & store)
     Route::resource('product', ProductController::class); 
@@ -70,7 +75,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 Route::middleware(['auth', 'user'])->group(function () {
     // Home Dashboard
     Route::get('/home', [HomeController::class, 'index'])->name('home');
-
+    
+    Route::get('/search', [HomeController::class, 'search'])->name('home.search');
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -93,11 +99,11 @@ Route::middleware(['auth', 'user'])->group(function () {
     // Single product checkout page (GET)
     Route::get('/checkout/{product}', [CheckoutController::class, 'single'])->name('checkout.single');
 
-    // Process checkout
-    Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
-
-    // Order success page
-    Route::get('/checkout/success/{order_id}', [CheckoutController::class, 'success'])->name('checkout.success');
+    Route::post('/checkout/process', [CheckoutController::class, 'process'])
+     ->name('checkout.process');
+     
+    Route::get('/checkout/success/{order_id}', [CheckoutController::class, 'success'])
+     ->name('checkout.success');
     
     // Reviews
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
