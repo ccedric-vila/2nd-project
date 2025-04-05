@@ -12,11 +12,13 @@ class Order extends Model
 
     const STATUS_PENDING = 'pending';
     const STATUS_ACCEPTED = 'accepted';
+    const STATUS_DELIVERED = 'delivered';
     const STATUS_CANCELLED = 'cancelled';
 
     protected $primaryKey = 'id';
     protected $table = 'orders';
-
+    protected $dates = ['delivered_at'];
+    
     protected $fillable = [
         'user_id',
         'total_amount',

@@ -17,10 +17,19 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\LandingController;
 
+use App\Mail\WelcomeEmail;
+use Illuminate\Support\Facades\Mail;
 
 
+Route::get('/send-test-email', function () {
+    $user = (object) [
+        'name' => 'John Doe',
+        'email' => 'test@example.com', // Mailtrap will intercept this
+    ];
 
-
+    Mail::to($user->email)->send(new WelcomeEmail($user, '123456'));
+    return "Email sent to Mailtrap!";
+});
 Route::get('/', [LandingController::class, 'index'])->name('welcome');
 
 // Authentication Routes
@@ -61,9 +70,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('users/{user}/role', [UserController::class, 'updateRole'])->name('users.updateRole');
 
     // Order Routes
-    Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::post('orders/{id}/accept', [OrderController::class, 'accept'])->name('orders.accept');
-    Route::post('orders/{id}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::post('/orders/{id}/accept', [OrderController::class, 'accept'])->name('.orders.accept');
+    Route::post('/orders/{order}/deliver', [OrderController::class, 'deliver'])->name('orders.deliver');
+    Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 
     // Review Routes
     Route::get('reviews', [ManageReviewController::class, 'index'])->name('reviews.index');
