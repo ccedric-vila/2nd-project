@@ -103,17 +103,25 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
     
-   // Buy Now button route (POST)
-    Route::post('/checkout/single', [CheckoutController::class, 'handleSingleCheckout'])->name('checkout.handle-single');
+    // Buy Now button route (POST)
+    Route::post('/checkout/single', [CheckoutController::class, 'handleSingleCheckout'])
+    ->name('checkout.handle-single');
 
     // Single product checkout page (GET)
-    Route::get('/checkout/{product}', [CheckoutController::class, 'single'])->name('checkout.single');
+    Route::get('/checkout/{product}', [CheckoutController::class, 'single'])
+    ->name('checkout.single');
 
+    // Process checkout (POST)
     Route::post('/checkout/process', [CheckoutController::class, 'process'])
-     ->name('checkout.process');
-     
+    ->name('checkout.process');
+
+    // Checkout success page (GET)
     Route::get('/checkout/success/{order_id}', [CheckoutController::class, 'success'])
-     ->name('checkout.success');
+    ->name('checkout.success');
+
+    // AJAX quantity update route (POST)
+    Route::post('/checkout/update-quantity', [CheckoutController::class, 'updateQuantity'])
+    ->name('checkout.update-quantity');
     
     // Reviews
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');

@@ -2,27 +2,144 @@
 <div class="container">
     <h1 class="text-center mb-4">Welcome to StyleSphere</h1>
     
-    <!-- Search Form -->
+    <!-- Search Form - Updated with Working Price Range Filter -->
     <div class="container mb-4">
-        <form action="<?php echo e(route('home.search')); ?>" method="GET">
-            <div class="input-group">
-                <input type="text" 
-                    name="search" 
-                    class="form-control" 
-                    placeholder="Search products..."
-                    value="<?php echo e(request('search')); ?>">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-search"></i>
-                </button>
-                <?php if(request('search')): ?>
-                    <a href="<?php echo e(route('home')); ?>" class="btn btn-outline-secondary">
-                        Clear
-                    </a>
-                <?php endif; ?>
+        <form action="<?php echo e(route('home')); ?>" method="GET">
+            <!-- Existing Search and Price Range Row -->
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <input type="text" 
+                            name="search" 
+                            class="form-control" 
+                            placeholder="Search products..."
+                            value="<?php echo e(request('search')); ?>">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        <?php if(request('search') || request('price_range') || request('size') || request('category') || request('types')): ?>
+                            <a href="<?php echo e(route('home')); ?>" class="btn btn-outline-secondary">
+                                Clear All
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <select name="price_range" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Prices</option>
+                            <option value="0-1000" <?php echo e(request('price_range') == '0-1000' ? 'selected' : ''); ?>>$0 - $1000</option>
+                            <option value="1001-2000" <?php echo e(request('price_range') == '1001-2000' ? 'selected' : ''); ?>>$1001 - $2000</option>
+                            <option value="2001-3000" <?php echo e(request('price_range') == '2001-3000' ? 'selected' : ''); ?>>$2001 - $3000</option>
+                            <option value="3001-4000" <?php echo e(request('price_range') == '3001-4000' ? 'selected' : ''); ?>>$3001 - $4000</option>
+                            <option value="4001-5000" <?php echo e(request('price_range') == '4001-5000' ? 'selected' : ''); ?>>$4001 - $5000</option>
+                            <option value="5001-6000" <?php echo e(request('price_range') == '5001-6000' ? 'selected' : ''); ?>>$5001 - $6000</option>
+                            <option value="6001-7000" <?php echo e(request('price_range') == '6001-7000' ? 'selected' : ''); ?>>$6001 - $7000</option>
+                            <option value="7001-8000" <?php echo e(request('price_range') == '7001-8000' ? 'selected' : ''); ?>>$7001 - $8000</option>
+                            <option value="8001-9000" <?php echo e(request('price_range') == '8001-9000' ? 'selected' : ''); ?>>$8001 - $9000</option>
+                            <option value="9001-10000" <?php echo e(request('price_range') == '9001-10000' ? 'selected' : ''); ?>>$9001 - $10000</option>
+                        </select>
+                        <?php if(request('price_range')): ?>
+                            <a href="<?php echo e(route('home', array_merge(request()->except('price_range'), ['page' => null]))); ?>" class="btn btn-outline-secondary">
+                                Clear Price
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
+
+            <!-- NEW FILTER ROW ADDED HERE -->
+            <div class="row g-3 mt-2">
+                <!-- Size Filter -->
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <label class="input-group-text" for="size">Size</label>
+                        <select name="size" id="size" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Sizes</option>
+                            <option value="XS" <?php echo e(request('size') == 'XS' ? 'selected' : ''); ?>>XS</option>
+                            <option value="S" <?php echo e(request('size') == 'S' ? 'selected' : ''); ?>>S</option>
+                            <option value="M" <?php echo e(request('size') == 'M' ? 'selected' : ''); ?>>M</option>
+                            <option value="L" <?php echo e(request('size') == 'L' ? 'selected' : ''); ?>>L</option>
+                            <option value="XL" <?php echo e(request('size') == 'XL' ? 'selected' : ''); ?>>XL</option>
+                            <option value="XXL" <?php echo e(request('size') == 'XXL' ? 'selected' : ''); ?>>XXL</option>
+                        </select>
+                        <?php if(request('size')): ?>
+                            <a href="<?php echo e(route('home', array_merge(request()->except('size'), ['page' => null]))); ?>" class="btn btn-outline-secondary">
+                                Clear
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
+                <!-- Category Filter -->
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <label class="input-group-text" for="category">Category</label>
+                        <select name="category" id="category" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Categories</option>
+                            <option value="Mens" <?php echo e(request('category') == 'Mens' ? 'selected' : ''); ?>>Mens</option>
+                            <option value="Womens" <?php echo e(request('category') == 'Womens' ? 'selected' : ''); ?>>Womens</option>
+                            <option value="Kids" <?php echo e(request('category') == 'Kids' ? 'selected' : ''); ?>>Kids</option>
+                        </select>
+                        <?php if(request('category')): ?>
+                            <a href="<?php echo e(route('home', array_merge(request()->except('category'), ['page' => null]))); ?>" class="btn btn-outline-secondary">
+                                Clear
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
+                <!-- Types Filter -->
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <label class="input-group-text" for="types">Types</label>
+                        <select name="types" id="types" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Types</option>
+                            <option value="T-shirt" <?php echo e(request('types') == 'T-shirt' ? 'selected' : ''); ?>>T-shirt</option>
+                            <option value="Polo Shirt" <?php echo e(request('types') == 'Polo Shirt' ? 'selected' : ''); ?>>Polo Shirt</option>
+                            <option value="Sweater" <?php echo e(request('types') == 'Sweater' ? 'selected' : ''); ?>>Sweater</option>
+                            <option value="Hoodie" <?php echo e(request('types') == 'Hoodie' ? 'selected' : ''); ?>>Hoodie</option>
+                            <option value="Jersey" <?php echo e(request('types') == 'Jersey' ? 'selected' : ''); ?>>Jersey</option>
+                            <option value="Dress" <?php echo e(request('types') == 'Dress' ? 'selected' : ''); ?>>Dress</option>
+                            <option value="Sweatshirt" <?php echo e(request('types') == 'Sweatshirt' ? 'selected' : ''); ?>>Sweatshirt</option>
+                            <option value="Pants" <?php echo e(request('types') == 'Pants' ? 'selected' : ''); ?>>Pants</option>
+                            <option value="Shorts" <?php echo e(request('types') == 'Shorts' ? 'selected' : ''); ?>>Shorts</option>
+                        </select>
+                        <?php if(request('types')): ?>
+                            <a href="<?php echo e(route('home', array_merge(request()->except('types'), ['page' => null]))); ?>" class="btn btn-outline-secondary">
+                                Clear
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            <!-- END OF NEW FILTER ROW -->
         </form>
+
+        <!-- Price Sorting Options - Single Toggle Button Version -->
+        <?php if($products->isNotEmpty()): ?>
+        <div class="mt-3 d-flex justify-content-end">
+            <?php
+                $currentSort = request('sort');
+                $nextSort = ($currentSort == 'price_asc') ? 'price_desc' : 'price_asc';
+                $buttonText = ($currentSort == 'price_asc');
+                $buttonIcon = ($currentSort == 'price_asc') ? 'fa-arrow-down' : 'fa-arrow-up';
+                $buttonClass = ($currentSort == 'price_asc' || $currentSort == 'price_desc') ? 'btn-primary' : 'btn-outline-primary';
+            ?>
+            
+            <div class="btn-group" role="group">
+                <span class="input-group-text bg-transparent border-0 pe-1 small">Sort by:</span>
+                <a href="<?php echo e(request()->fullUrlWithQuery(['sort' => $nextSort, 'page' => null])); ?>" 
+                   class="btn <?php echo e($buttonClass); ?>">
+                    <i class="fas <?php echo e($buttonIcon); ?>"></i> <?php echo e($buttonText); ?>
+
+                </a>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
+    <!-- Rest of your existing product display code remains exactly the same -->
     <div class="row">
         <?php if(request('search') && $products->isEmpty()): ?>
             <div class="col-12 text-center py-5">
@@ -64,6 +181,23 @@
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title"><?php echo e($product->product_name); ?></h5>
                             <p class="card-text"><strong>Brand:</strong> <?php echo e($product->supplier->brand_name ?? 'No Brand'); ?></p>
+                            
+                            <!-- Updated Category, Type, and Size Information to match model -->
+                            <div class="mb-2">
+                                <?php if($product->category): ?>
+                                    <span class="badge bg-primary me-1"><?php echo e($product->category); ?></span>
+                                <?php endif; ?>
+                                
+                                <?php if($product->types): ?>
+                                    <span class="badge bg-secondary me-1"><?php echo e($product->types); ?></span>
+                                <?php endif; ?>
+                                
+                                <?php if($product->size): ?>
+                                    <span class="badge bg-info"><?php echo e($product->size); ?></span>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <p class="card-text"><strong>Description:</strong> <?php echo e(Str::limit($product->description, 100)); ?></p>
                             <p class="card-text"><strong>Price:</strong> $<?php echo e(number_format($product->sell_price, 2)); ?></p>
                             <p class="card-text"><strong>Stock:</strong> <?php echo e($product->stock); ?></p>
                             

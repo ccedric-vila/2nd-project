@@ -72,6 +72,7 @@
                         <?php echo csrf_field(); ?>
                         <input type="hidden" name="product_id" value="<?php echo e($product->product_id); ?>">
                         <input type="hidden" id="unit-price" value="<?php echo e($product->sell_price); ?>">
+                        <input type="hidden" name="size" value="<?php echo e($product->size); ?>">
 
                         <div class="row g-3">
                             <!-- Shipping Information -->
@@ -82,21 +83,16 @@
                                     </div>
                                     <div class="card-body">
                                         <div class="mb-3">
-                                            <label for="fullName" class="form-label">Full Name</label>
-                                            <input type="text" class="form-control" id="fullName" 
-                                                value="<?php echo e(Auth::user()->name); ?>" readonly>
+                                            <label class="form-label">Full Name</label>
+                                            <div class="form-control-plaintext"><?php echo e(Auth::user()->name); ?></div>
                                         </div>
                                         <div class="mb-3">
-                                            <label for="contactNumber" class="form-label">Contact Number *</label>
-                                            <input type="text" class="form-control" id="contactNumber" 
-                                                name="contact_number" value="<?php echo e(Auth::user()->contact_number ?? ''); ?>" required>
-                                            <div class="invalid-feedback">Please provide a valid contact number</div>
+                                            <label class="form-label">Contact Number</label>
+                                            <div class="form-control-plaintext"><?php echo e(Auth::user()->contact_number ?? 'Not provided'); ?></div>
                                         </div>
                                         <div class="mb-3">
-                                            <label for="shippingAddress" class="form-label">Shipping Address *</label>
-                                            <textarea class="form-control" id="shippingAddress" 
-                                                    name="address" rows="3" required><?php echo e(Auth::user()->address ?? ''); ?></textarea>
-                                            <div class="invalid-feedback">Please provide your shipping address</div>
+                                            <label class="form-label">Shipping Address</label>
+                                            <div class="form-control-plaintext"><?php echo e(Auth::user()->address ?? 'Not provided'); ?></div>
                                         </div>
                                     </div>
                                 </div>
@@ -111,21 +107,18 @@
                                     <div class="card-body">
                                         <div class="mb-3">
                                             <label for="quantity" class="form-label">Quantity *</label>
-                                            <input type="number" class="form-control" id="quantity" 
-                                                name="quantity" min="1" max="<?php echo e($product->stock); ?>" value="1" required>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" id="quantity" 
+                                                    name="quantity" min="1" max="<?php echo e($product->stock); ?>" value="1" required>
+                                                <button class="btn btn-outline-primary" type="button" id="update-quantity">
+                                                    <i class="fas fa-sync-alt"></i> Update
+                                                </button>
+                                            </div>
                                             <div class="invalid-feedback">Please select a valid quantity (1-<?php echo e($product->stock); ?>)</div>
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label">Selected Size</label>
-                                            <select class="form-select" name="size" required>
-                                                <option value="XS" <?php echo e($product->size == 'XS' ? 'selected' : ''); ?>>XS</option>
-                                                <option value="S" <?php echo e($product->size == 'S' ? 'selected' : ''); ?>>S</option>
-                                                <option value="M" <?php echo e($product->size == 'M' ? 'selected' : ''); ?>>M</option>
-                                                <option value="L" <?php echo e($product->size == 'L' ? 'selected' : ''); ?>>L</option>
-                                                <option value="XL" <?php echo e($product->size == 'XL' ? 'selected' : ''); ?>>XL</option>
-                                                <option value="XXL" <?php echo e($product->size == 'XXL' ? 'selected' : ''); ?>>XXL</option>
-                                            </select>
-                                            <div class="invalid-feedback">Please select a size</div>
+                                            <div class="form-control-plaintext"><?php echo e($product->size); ?></div>
                                         </div>
                                     </div>
                                 </div>
@@ -179,7 +172,7 @@
     .rating {
         color: #ffc107;
     }
-    .form-control:focus, .form-select:focus {
+    .form-control:focus {
         border-color: #667eea;
         box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
     }
@@ -190,44 +183,115 @@
     .was-validated .form-control:invalid ~ .invalid-feedback {
         display: block;
     }
+    .form-control-plaintext {
+        padding: 0.375rem 0;
+        margin-bottom: 0;
+        line-height: 1.5;
+        background-color: transparent;
+        border: solid transparent;
+        border-width: 1px 0;
+    }
+    #update-quantity {
+        transition: all 0.3s ease;
+    }
+    #update-quantity:hover {
+        background-color: #667eea;
+        color: white;
+    }
 </style>
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('scripts'); ?>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Get all required elements
         const quantityInput = document.getElementById('quantity');
+        const updateButton = document.getElementById('update-quantity');
         const quantityDisplay = document.getElementById('quantity-display');
         const totalPriceElement = document.getElementById('total-price');
         const displayPriceElement = document.getElementById('display-price');
-        const unitPrice = parseFloat(document.getElementById('unit-price').value);
+        const productId = document.querySelector('input[name="product_id"]').value;
+        const unitPrice = parseFloat("<?php echo e($product->sell_price); ?>");
         const maxStock = parseInt("<?php echo e($product->stock); ?>");
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-        function updateTotals() {
-            let quantity = parseInt(quantityInput.value);
-            
-            // Validate quantity
-            if (isNaN(quantity)) quantity = 1;
-            if (quantity < 1) quantity = 1;
-            if (quantity > maxStock) quantity = maxStock;
-            
-            // Update the input if it was corrected
-            quantityInput.value = quantity;
-            
-            // Update displays
-            quantityDisplay.textContent = quantity;
-            const totalPrice = (quantity * unitPrice).toFixed(2);
-            totalPriceElement.textContent = totalPrice;
-            displayPriceElement.textContent = unitPrice.toFixed(2);
+        // Function to update totals via AJAX
+        async function updateTotals() {
+            try {
+                // Get and validate quantity
+                let quantity = parseInt(quantityInput.value);
+                if (isNaN(quantity) quantity = 1;
+                if (quantity < 1) quantity = 1;
+                if (quantity > maxStock) quantity = maxStock;
+                quantityInput.value = quantity;
+
+                // Show loading state
+                updateButton.disabled = true;
+                updateButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating';
+
+                // Make AJAX request
+                const response = await fetch("<?php echo e(route('checkout.update-quantity')); ?>", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        quantity: quantity
+                    })
+                });
+
+                // Handle response
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+
+                // Update UI with new data
+                quantityDisplay.textContent = data.quantity;
+                totalPriceElement.textContent = data.formatted_total;
+                displayPriceElement.textContent = data.formatted_unit_price;
+                
+                // Update stock display if exists
+                const stockElement = document.querySelector('.available-stock');
+                if (stockElement) {
+                    stockElement.textContent = data.available_stock;
+                }
+
+                // Show success feedback
+                updateButton.innerHTML = '<i class="fas fa-check"></i> Updated';
+                updateButton.classList.remove('btn-outline-primary');
+                updateButton.classList.add('btn-success');
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to update quantity: ' + error.message);
+            } finally {
+                // Reset button after delay
+                setTimeout(() => {
+                    updateButton.innerHTML = '<i class="fas fa-sync-alt"></i> Update';
+                    updateButton.classList.remove('btn-success');
+                    updateButton.classList.add('btn-outline-primary');
+                    updateButton.disabled = false;
+                }, 1500);
+            }
         }
 
-        // Initial update
+        // Initial setup
         updateTotals();
 
-        // Update when quantity changes
-        quantityInput.addEventListener('input', updateTotals);
-        quantityInput.addEventListener('change', updateTotals);
+        // Event listeners
+        updateButton.addEventListener('click', updateTotals);
         
+        quantityInput.addEventListener('change', function() {
+            if (parseInt(quantityInput.value) !== parseInt(quantityDisplay.textContent)) {
+                updateTotals();
+            }
+        });
+
         // Form validation
         const form = document.querySelector('.needs-validation');
         form.addEventListener('submit', function(event) {
