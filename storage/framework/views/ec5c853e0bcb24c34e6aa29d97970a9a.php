@@ -93,22 +93,24 @@
                             
                             <div class="mt-auto">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <form action="<?php echo e(route('cart.add')); ?>" method="POST" class="mb-2">
-                                        <?php echo csrf_field(); ?>
-                                        <input type="hidden" name="product_id" value="<?php echo e($product->id); ?>">
-                                        <button type="submit" class="btn btn-outline-primary">
-                                            <i class="fas fa-shopping-cart me-1"></i> Add to Cart
-                                        </button>
-                                    </form>
+                                <form action="<?php echo e(route('cart.add')); ?>" method="POST" class="mb-2">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="product_id" value="<?php echo e($product->product_id); ?>">
+                                    <button type="submit" class="btn btn-outline-primary">
+                                        <i class="fas fa-shopping-cart me-1"></i> Add to Cart
+                                    </button>
+                                </form>
 
                                     <!-- Updated Buy Now Button -->
-                                    <<form action="<?php echo e(route('checkout.single')); ?>" method="POST" class="mb-2">
+                                                                <!-- Buy Now button -->
+                                    <form action="<?php echo e(route('checkout.handle-single')); ?>" method="POST" class="mb-2">
                                         <?php echo csrf_field(); ?>
                                         <input type="hidden" name="product_id" value="<?php echo e($product->product_id); ?>">
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-bolt me-1"></i> Buy Now
                                         </button>
                                     </form>
+
                                 </div>
                             </div>
                             

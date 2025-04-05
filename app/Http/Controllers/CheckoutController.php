@@ -25,9 +25,16 @@ class CheckoutController extends Controller
     // Show single product checkout page
     public function single(Product $product)
     {
+        $user = Auth::user();
+        
+        // Ensure we have default values if fields are null
+        $contact_number = $user->contact_number ?? '';
+        $address = $user->address ?? '';
+        
         return view('checkout.single', [
             'product' => $product->load('images'),
-            'user' => Auth::user()
+            'contact_number' => $contact_number,
+            'address' => $address
         ]);
     }
 
@@ -38,7 +45,7 @@ class CheckoutController extends Controller
             'product_id' => 'required|exists:product,product_id',
             'quantity' => 'required|integer|min:1',
             'size' => 'required|in:XS,S,M,L,XL,XXL',
-            'contact_number' => 'required|string|max:255',
+            'contact_number' => 'required|string|max:20',
             'address' => 'required|string|max:255'
         ]);
 
@@ -50,27 +57,29 @@ class CheckoutController extends Controller
         }
 
         // Create order
-        $order = new Order();
-        $order->user_id = Auth::id();
-        $order->total_amount = $product->sell_price * $request->quantity;
-        $order->status = 'pending'; // Requires admin approval
-        $order->save();
+        $order = Order::create([
+            'user_id' => Auth::id(),
+            'total_amount' => $product->sell_price * $request->quantity,
+            'status' => 'pending',
+            'shipping_address' => $request->address,
+            'contact_number' => $request->contact_number,
+            'customer_name' => Auth::user()->name
+        ]);
 
         // Create order line with size information
-        $orderLine = new OrderLine();
-        $orderLine->order_id = $order->id;
-        $orderLine->product_id = $product->product_id;
-        $orderLine->quantity = $request->quantity;
-        $orderLine->sell_price = $product->sell_price;
-        // Add size to order line (assuming you'll add this column)
-        $orderLine->size = $request->size;
-        $orderLine->save();
+        $orderLine = OrderLine::create([
+            'order_id' => $order->id,
+            'product_id' => $product->product_id,
+            'quantity' => $request->quantity,
+            'unit_price' => $product->sell_price,
+            'total_price' => $product->sell_price * $request->quantity,
+            'size' => $request->size
+        ]);
 
         // Update product stock
-        $product->stock -= $request->quantity;
-        $product->save();
+        $product->decrement('stock', $request->quantity);
 
-        // Update user's contact information if changed
+        // Update user's contact information
         $user = Auth::user();
         $user->update([
             'contact_number' => $request->contact_number,

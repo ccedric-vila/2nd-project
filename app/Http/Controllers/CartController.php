@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cart;
 use App\Models\Product;
-use App\Models\Order; 
+use App\Models\Order;
 use App\Models\OrderLine;
 use Illuminate\Http\Request;
 
@@ -13,54 +13,54 @@ class CartController extends Controller
     // Add a product to the cart
     public function addToCart(Request $request)
     {
-        $productId = $request->input('product_id');  // Get the product_id from the form
-        
-        if (!$productId) {
-            return redirect()->route('cart.index')->with('error', 'Product ID is missing.');
-        }
-    
-        // Get the authenticated user
+        $request->validate([
+            'product_id' => 'required|integer|exists:product,product_id'
+        ]);
+
+        $productId = $request->input('product_id');
         $userId = auth()->id();
-    
-        // Find the product using the product_id column
-        $product = Product::where('product_id', $productId)->first();  // Use product_id here
-    
+
+        // Find product by product_id only (since that's your primary key)
+        $product = Product::where('product_id', $productId)->first();
+
         if (!$product) {
-            return redirect()->route('cart.index')->with('error', 'Product not found.');
+            return back()->with('error', 'Product not found.');
         }
-    
-        // Check if the product is already in the cart
+
+        // Check if product is already in cart
         $cartItem = Cart::where('user_id', $userId)
-                        ->where('product_id', $productId)  // Use product_id here
-                        ->first();
-    
+                      ->where('product_id', $productId)
+                      ->first();
+
         if ($cartItem) {
-            // If product is already in cart, increase quantity
-            $cartItem->quantity++;
-            $cartItem->save();
+            $cartItem->increment('quantity');
         } else {
-            // If product is not in cart, add a new entry
             Cart::create([
                 'user_id' => $userId,
                 'product_id' => $productId,
                 'quantity' => 1
             ]);
         }
-    
+
         return redirect()->route('cart.index')->with('success', 'Product added to cart!');
     }
 
     // View the cart items
     public function index()
     {
-        $cartItems = Cart::where('user_id', auth()->id())->with('product')->get();
+        $cartItems = Cart::with('product') // Make sure this relationship is defined in Cart model
+                       ->where('user_id', auth()->id())
+                       ->get();
+        
         return view('cart.index', compact('cartItems'));
     }
     
     // Remove a product from the cart
     public function removeFromCart($id)
     {
-        $cartItem = Cart::find($id);
+        $cartItem = Cart::where('id', $id)
+                      ->where('user_id', auth()->id())
+                      ->first();
 
         if ($cartItem) {
             $cartItem->delete();
@@ -70,48 +70,54 @@ class CartController extends Controller
         return redirect()->route('cart.index')->with('error', 'Product not found in cart.');
     }
 
-    // Update a cart
+    // Update cart item quantity
     public function update(Request $request, $id)
     {
-        $cartItem = Cart::findOrFail($id);
-        $newQuantity = max(1, $request->quantity);
-        $cartItem->update(['quantity' => $newQuantity]);
+        $request->validate([
+            'quantity' => 'required|integer|min:1'
+        ]);
 
-        return redirect()->back()->with('success', 'Cart updated successfully.');
+        $cartItem = Cart::where('id', $id)
+                      ->where('user_id', auth()->id())
+                      ->firstOrFail();
+
+        $cartItem->update(['quantity' => $request->quantity]);
+
+        return back()->with('success', 'Cart updated successfully.');
     }
 
+    // Process checkout
     public function checkout(Request $request)
     {
-        // Get the authenticated user's cart items
-        $cartItems = Cart::where('user_id', auth()->id())->with('product')->get();
-    
-        // Calculate the total price using sell_price
-        $total = $cartItems->sum(fn($item) => $item->quantity * $item->product->sell_price);
-    
-        // Create the order
+        $cartItems = Cart::with('product')
+                       ->where('user_id', auth()->id())
+                       ->get();
+
+        if ($cartItems->isEmpty()) {
+            return back()->with('error', 'Your cart is empty.');
+        }
+
+        $total = $cartItems->sum(function($item) {
+            return $item->quantity * $item->product->price; // Changed from sell_price to price
+        });
+
         $order = Order::create([
             'user_id' => auth()->id(),
             'total_amount' => $total,
-            'status' => Order::STATUS_PENDING, // Default status is pending
+            'status' => 'pending', // Changed from Order::STATUS_PENDING
         ]);
-    
-        // Create order lines
+
         foreach ($cartItems as $item) {
             OrderLine::create([
                 'order_id' => $order->id,
                 'product_id' => $item->product_id,
                 'quantity' => $item->quantity,
-                'sell_price' => $item->product->sell_price, // Use sell_price
+                'price' => $item->product->price, // Changed from sell_price to price
             ]);
         }
-    
-        // Clear the cart
+
         Cart::where('user_id', auth()->id())->delete();
-    
-        // Redirect to a success page
+
         return redirect()->route('cart.index')->with('success', 'Order placed successfully!');
     }
-
-
-
 }

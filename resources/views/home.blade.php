@@ -95,22 +95,24 @@
                             
                             <div class="mt-auto">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <form action="{{ route('cart.add') }}" method="POST" class="mb-2">
-                                        @csrf
-                                        <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                        <button type="submit" class="btn btn-outline-primary">
-                                            <i class="fas fa-shopping-cart me-1"></i> Add to Cart
-                                        </button>
-                                    </form>
+                                <form action="{{ route('cart.add') }}" method="POST" class="mb-2">
+                                    @csrf
+                                    <input type="hidden" name="product_id" value="{{ $product->product_id }}">
+                                    <button type="submit" class="btn btn-outline-primary">
+                                        <i class="fas fa-shopping-cart me-1"></i> Add to Cart
+                                    </button>
+                                </form>
 
                                     <!-- Updated Buy Now Button -->
-                                    <<form action="{{ route('checkout.single') }}" method="POST" class="mb-2">
+                                                                <!-- Buy Now button -->
+                                    <form action="{{ route('checkout.handle-single') }}" method="POST" class="mb-2">
                                         @csrf
                                         <input type="hidden" name="product_id" value="{{ $product->product_id }}">
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-bolt me-1"></i> Buy Now
                                         </button>
                                     </form>
+
                                 </div>
                             </div>
                             

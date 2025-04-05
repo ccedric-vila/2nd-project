@@ -87,7 +87,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
     
-    // Buy Now button route (POST)
+   // Buy Now button route (POST)
     Route::post('/checkout/single', [CheckoutController::class, 'handleSingleCheckout'])->name('checkout.handle-single');
 
     // Single product checkout page (GET)
