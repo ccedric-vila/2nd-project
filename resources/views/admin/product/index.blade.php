@@ -7,7 +7,7 @@
             <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Back to Dashboard
             </a>
-            <a href="{{ route('admin.product.import') }}" class="btn btn-primary ml-2">
+            <a href="{{ route('admin.products.import') }}" class="btn btn-primary ml-2">
                 <i class="fas fa-file-import"></i> Import
             </a>
         </div>

@@ -168,27 +168,46 @@ class ProductController extends Controller
             ->with('success', 'Product deleted successfully.');
     }
 //EXCEL
-
 public function showImportForm()
 {
-    $supplier = Supplier::orderBy('brand_name')->get();
-    return view('admin.product.import', compact('supplier'));
+    $suppliers = Supplier::orderBy('brand_name')->get();
+    return view('admin.product.import', compact('suppliers'));
 }
 
 public function import(Request $request)
 {
     $request->validate([
-        'supplier_id' => 'required|exists:supplier,supplier_id',
-        'file' => 'required|file|mimes:xlsx,xls,csv|max:2048'
+        'supplier_id' => 'required|exists:suppliers,id',
+        'file' => 'required|file|mimes:xlsx,xls,csv|max:5120'
     ]);
 
     try {
         $import = new ProductsImport($request->supplier_id);
+        
         Excel::import($import, $request->file('file'));
+        
+        $importCount = $import->getRowCount();
+        $skippedRows = $import->getSkippedRows();
+
+        $message = "Successfully imported {$importCount} products.";
+        
+        if (!empty($skippedRows)) {
+            $message .= " Skipped " . count($skippedRows) . " rows.";
+            session()->flash('skipped_rows', $skippedRows);
+        }
 
         return redirect()
-            ->route('admin.product.index')
-            ->with('success', 'Products imported successfully!');
+            ->route('admin.products.index')
+            ->with('success', $message);
+
+    } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+        $errors = collect($e->failures())->map(function($failure) {
+            return "Row {$failure->row()}: {$failure->errors()[0]}";
+        });
+
+        return back()
+            ->with('errors', $errors)
+            ->withInput();
 
     } catch (\Exception $e) {
         return back()

@@ -55,8 +55,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Product Routes (Fixed: Now includes create & store)
     Route::resource('product', ProductController::class); 
-    Route::get('/product/import', [ProductController::class, 'showImportForm'])->name('product.import');
-    Route::post('/product/import', [ProductController::class, 'import'])->name('product.import.submit');
+    Route::get('products/import', [ProductController::class, 'showImportForm'])->name('products.import');
+    Route::post('products/import', [ProductController::class, 'import'])->name('products.import.submit');
+
 
     // Supplier Routes
     Route::resource('supplier', SupplierController::class);
