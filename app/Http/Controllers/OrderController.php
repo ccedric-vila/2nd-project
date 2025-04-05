@@ -45,54 +45,52 @@ class OrderController extends Controller
 
     // Accept order (Admin) - Creates sales records
     public function accept($id)
-    {
-        DB::beginTransaction();
-        
-        try {
-            $order = Order::with('orderLines.product')->findOrFail($id);
+{
+    DB::beginTransaction();
     
-            if ($order->status !== Order::STATUS_PENDING) {
-                return redirect()->back()->with('error', 'Only pending orders can be accepted.');
-            }
-            
-            // Update order status
-            $order->update(['status' => Order::STATUS_ACCEPTED]);
-            
-            // Update stock and create sales records
-            foreach ($order->orderLines as $orderLine) {
-                $product = $orderLine->product;
-                
-                // Check stock
-                if ($product->stock < $orderLine->quantity) {
-                    DB::rollBack();
-                    return redirect()->back()->with('error', "Insufficient stock for: {$product->name}");
-                }
-                
-                // Decrease stock
-                $product->decrement('stock', $orderLine->quantity);
-                
-                // Create sale record
-                Sale::create([
-                    'order_id' => $order->id,
-                    'order_line_id' => $orderLine->id,
-                    'product_id' => $orderLine->product_id,
-                    'user_id' => $order->user_id,
-                    'quantity' => $orderLine->quantity,
-                    'unit_price' => $orderLine->sell_price,
-                    'total_price' => $orderLine->quantity * $orderLine->sell_price,
-                    'sale_date' => now()->toDateString()
-                ]);
-            }
-            
-            DB::commit();
-            return redirect()->route('admin.orders.index')->with('success', 'Order accepted and sales recorded!');
-            
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
-        }
-    }
+    try {
+        $order = Order::with('orderLines.product')->findOrFail($id);
 
+        if ($order->status !== Order::STATUS_PENDING) {
+            return redirect()->back()->with('error', 'Only pending orders can be accepted.');
+        }
+        
+        // Update order status
+        $order->update(['status' => Order::STATUS_ACCEPTED]);
+        
+        // Update stock and create sales records
+        foreach ($order->orderLines as $orderLine) {
+            $product = $orderLine->product;
+            
+            // Check stock
+            if ($product->stock < $orderLine->quantity) {
+                DB::rollBack();
+                return redirect()->back()->with('error', "Insufficient stock for: {$product->name}");
+            }
+            
+            // Decrease stock
+            $product->decrement('stock', $orderLine->quantity);
+            
+            // Create sale record (removed total_price as it's auto-generated)
+            Sale::create([
+                'order_id' => $order->id,
+                'order_line_id' => $orderLine->id,
+                'product_id' => $orderLine->product_id,
+                'user_id' => $order->user_id,
+                'quantity' => $orderLine->quantity,
+                'unit_price' => $orderLine->sell_price,
+                'sale_date' => now()->toDateString()
+            ]);
+        }
+        
+        DB::commit();
+        return redirect()->route('admin.orders.index')->with('success', 'Order accepted and sales recorded!');
+        
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+    }
+}
     // Cancel order (Admin)
     public function cancel($id)
     {

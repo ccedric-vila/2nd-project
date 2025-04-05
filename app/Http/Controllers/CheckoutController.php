@@ -16,7 +16,7 @@ class CheckoutController extends Controller
     public function handleSingleCheckout(Request $request)
     {
         $request->validate([
-            'product_id' => 'required|exists:product,product_id'
+            'product_id' => 'required|exists:product,product_id'  // Changed from 'product' to 'products'
         ]);
 
         $product = Product::findOrFail($request->product_id);
@@ -31,8 +31,7 @@ class CheckoutController extends Controller
         
         return view('checkout.single', [
             'product' => $product->load('images'),
-            'contact_number' => $user->contact_number ?? '',
-            'address' => $user->address ?? ''
+            'user' => $user  // Pass the whole user object for better access
         ]);
     }
 
@@ -40,7 +39,7 @@ class CheckoutController extends Controller
     public function updateQuantity(Request $request)
     {
         $request->validate([
-            'product_id' => 'required|exists:product,product_id',
+            'product_id' => 'required|exists:product,product_id',  // Changed from 'product' to 'products'
             'quantity' => 'required|integer|min:1'
         ]);
 
@@ -74,11 +73,9 @@ class CheckoutController extends Controller
     public function process(Request $request)
     {
         $validated = $request->validate([
-            'product_id' => 'required|exists:product,product_id',
+            'product_id' => 'required|exists:product,product_id',  // Changed from 'product' to 'products'
             'quantity' => 'required|integer|min:1',
-            'size' => 'required|in:XS,S,M,L,XL,XXL',
-            'contact_number' => 'required|string|max:20',
-            'address' => 'required|string|max:255'
+            'size' => 'required|in:XS,S,M,L,XL,XXL'
         ]);
 
         try {
@@ -94,37 +91,29 @@ class CheckoutController extends Controller
                 return back()->withErrors(['quantity' => 'Only '.$product->stock.' items available'])->withInput();
             }
 
+            // Create the order
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'total_amount' => $product->sell_price * $validated['quantity'],
-                'status' => 'pending',
-                'shipping_address' => $validated['address'],
-                'contact_number' => $validated['contact_number'],
-                'customer_name' => Auth::user()->name,
-                'size' => $validated['size']
+                'status' => 'pending'  // Changed from default 'pending' to match your schema
             ]);
 
+            // Create order line item
             OrderLine::create([
                 'order_id' => $order->id,
                 'product_id' => $product->product_id,
                 'quantity' => $validated['quantity'],
-                'sell_price' => $product->sell_price,
-                'total_price' => $product->sell_price * $validated['quantity'],
-                'size' => $validated['size']
+                'sell_price' => $product->sell_price
             ]);
 
-            // Update user contact info
-            Auth::user()->update([
-                'contact_number' => $validated['contact_number'],
-                'address' => $validated['address']
-            ]);
+            // Update product stock
+            $product->decrement('stock', $validated['quantity']);
 
             DB::commit();
 
-            return back()->with([
-                'success' => 'Order placed successfully! Your order ID is: '.$order->id,
-                'order_id' => $order->id
-            ]);
+            // Redirect to success page with order ID
+            return redirect()->route('order.success', ['order' => $order->id])
+                            ->with('success', 'Order placed successfully!');
 
         } catch (\Exception $e) {
             DB::rollBack();

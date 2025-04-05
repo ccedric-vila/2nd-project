@@ -71,7 +71,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Order Routes
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::post('/orders/{id}/accept', [OrderController::class, 'accept'])->name('.orders.accept');
+    Route::post('/orders/{id}/accept', [OrderController::class, 'accept'])->name('orders.accept');
     Route::post('/orders/{order}/deliver', [OrderController::class, 'deliver'])->name('orders.deliver');
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 
