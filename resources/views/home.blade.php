@@ -218,7 +218,7 @@
                             </div>
                             
                             <p class="card-text"><strong>Description:</strong> {{ Str::limit($product->description, 100) }}</p>
-                            <p class="card-text"><strong>Price:</strong> ${{ number_format($product->sell_price, 2) }}</p>
+                            <p class="card-text"><strong>Price:</strong> ₱{{ number_format($product->sell_price, 2) }}</p>
                             <p class="card-text"><strong>Stock:</strong> {{ $product->stock }}</p>
                             
                             <div class="mb-3">

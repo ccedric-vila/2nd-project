@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -111,10 +112,27 @@
             flex: 1;
             padding: 2rem 0;
         }
+        
+        /* Chart specific styles */
+        .chart-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-title {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
     <div id="app">
+        <!-- Conditional rendering of navbar - show only if not on chart page -->
+        @unless(Request::is('charts*'))
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">
                 <a class="navbar-brand" href="{{ url('/') }}">
@@ -146,7 +164,7 @@
                             @endif
                         @else
                             <!-- ADMIN: Only show logout -->
-                            @if(Auth::user()->role === 'admin'))
+                            @if(Auth::user()->role === 'admin')
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('logout') }}"
                                        onclick="event.preventDefault();
@@ -200,6 +218,7 @@
                 </div>
             </div>
         </nav>
+        @endunless
 
         <main class="py-4">
             <div class="container">

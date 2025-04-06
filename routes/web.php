@@ -41,9 +41,9 @@ Auth::routes(['register' => false, 'login' => false]); // Disable default auth r
 // Custom Register Routes
 Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('register', [RegisterController::class, 'register']);
-// New email verification routes (add these)
-Route::get('/verify-email/{token}', [VerificationController::class, 'verify'])->name('verification.verify');
-Route::get('/email/verify', [VerificationController::class, 'show'])->name('verification.notice');
+
+
+
 // Custom Login Routes
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login']);
@@ -131,7 +131,9 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::delete('/cart/remove/{id}', [CartController::class, 'removeFromCart'])->name('cart.remove');
     Route::put('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
     Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
-
+    Route::post('/cart/update-quantity', [CartController::class, 'updateQuantity'])->name('cart.update.quantity');
+    Route::post('/cart/update-all', [CartController::class, 'updateAll'])->name('cart.update.all');
+    Route::post('/cart/summary', [CartController::class, 'cartSummary'])->name('cart.summary');
     // Orders
     Route::get('/orders/history', [OrderController::class, 'history'])->name('orders.history');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
@@ -140,7 +142,8 @@ Route::middleware(['auth', 'user'])->group(function () {
     // Buy Now button route (POST)
     Route::post('/checkout/single', [CheckoutController::class, 'handleSingleCheckout'])
     ->name('checkout.handle-single');
-
+    Route::post('/checkout/update-quantity', [CheckoutController::class, 'updateQuantity'])
+    ->name('checkout.update-quantity');
     // Single product checkout page (GET)
     Route::get('/checkout/{product}', [CheckoutController::class, 'single'])
     ->name('checkout.single');

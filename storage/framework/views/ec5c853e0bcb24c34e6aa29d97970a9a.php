@@ -218,7 +218,7 @@
                             </div>
                             
                             <p class="card-text"><strong>Description:</strong> <?php echo e(Str::limit($product->description, 100)); ?></p>
-                            <p class="card-text"><strong>Price:</strong> $<?php echo e(number_format($product->sell_price, 2)); ?></p>
+                            <p class="card-text"><strong>Price:</strong> ₱<?php echo e(number_format($product->sell_price, 2)); ?></p>
                             <p class="card-text"><strong>Stock:</strong> <?php echo e($product->stock); ?></p>
                             
                             <div class="mb-3">

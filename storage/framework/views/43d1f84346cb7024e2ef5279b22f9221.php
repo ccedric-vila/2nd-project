@@ -92,7 +92,6 @@
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startPush('scripts'); ?>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     // Initialize charts

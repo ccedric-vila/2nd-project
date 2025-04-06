@@ -7,6 +7,9 @@ use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderLine;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CartController extends Controller
 {
@@ -88,35 +91,89 @@ class CartController extends Controller
 
     public function checkout(Request $request)
     {
-        $cartItems = Cart::with('product')
-                       ->where('user_id', auth()->id())
-                       ->get();
-    
-        if ($cartItems->isEmpty()) {
-            return back()->with('error', 'Your cart is empty.');
-        }
-    
-        $total = $cartItems->sum(function($item) {
-            return $item->quantity * $item->product->sell_price; // Changed to sell_price
-        });
-    
-        $order = Order::create([
-            'user_id' => auth()->id(),
-            'total_amount' => $total,
-            'status' => 'pending',
-        ]);
-    
-        foreach ($cartItems as $item) {
-            OrderLine::create([
-                'order_id' => $order->id,
-                'product_id' => $item->product_id,
-                'quantity' => $item->quantity,
-                'sell_price' => $item->product->sell_price, // Changed to sell_price
+        DB::beginTransaction();
+        
+        try {
+            $cartItems = Cart::with('product')
+                           ->where('user_id', auth()->id())
+                           ->get();
+        
+            if ($cartItems->isEmpty()) {
+                return back()->with('error', 'Your cart is empty.');
+            }
+        
+            $total = $cartItems->sum(function($item) {
+                return $item->quantity * $item->product->sell_price;
+            });
+        
+            $order = Order::create([
+                'user_id' => auth()->id(),
+                'total_amount' => $total,
+                'status' => 'pending',
             ]);
+        
+            foreach ($cartItems as $item) {
+                OrderLine::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
+                    'sell_price' => $item->product->sell_price,
+                ]);
+            }
+        
+            Cart::where('user_id', auth()->id())->delete();
+            
+            DB::commit();
+            
+            return redirect()->route('checkout.success', ['order_id' => $order->id])
+                            ->with('success', 'Order placed successfully! Your order ID is #'.$order->id.'. It will be processed after payment confirmation.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Checkout failed: '.$e->getMessage());
+            return back()->with('error', 'An error occurred during checkout. Please try again.');
         }
-    
-        Cart::where('user_id', auth()->id())->delete();
-    
-        return redirect()->route('cart.index')->with('success', 'Order placed successfully!');
+    }
+
+    public function success($order_id)
+    {
+        $order = Order::with([
+            'orderLines.product.images',
+            'orderLines.product.supplier',
+            'user'
+        ])->findOrFail($order_id);
+        
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Format order data for display
+        $orderDetails = [
+            'order_id' => $order->id,
+            'order_date' => $order->created_at->format('F j, Y \a\t g:i A'),
+            'status' => ucfirst($order->status),
+            'total_amount' => '$'.number_format($order->total_amount, 2),
+            'payment_status' => 'Pending', // You might want to add payment status to your orders table
+            'shipping_address' => optional($order->user)->address ?? 'Not specified',
+            'contact_number' => optional($order->user)->contact_number ?? 'Not specified',
+            'items' => $order->orderLines->map(function ($line) {
+                return [
+                    'product_name' => $line->product->product_name,
+                    'size' => $line->size ?? 'N/A',
+                    'quantity' => $line->quantity,
+                    'unit_price' => '$'.number_format($line->sell_price, 2),
+                    'total_price' => '$'.number_format($line->sell_price * $line->quantity, 2),
+                    'image' => $line->product->images->first()->image_path ?? null,
+                    'brand' => $line->product->supplier->brand_name ?? 'Unknown Brand'
+                ];
+            })
+        ];
+
+        return view('checkout.success', [
+            'order' => $order,
+            'orderLines' => $order->orderLines,
+            'orderDetails' => $orderDetails,
+            'user' => $order->user
+        ]);
     }
 }

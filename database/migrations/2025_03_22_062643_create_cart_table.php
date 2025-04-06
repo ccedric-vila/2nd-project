@@ -29,7 +29,7 @@ return new class extends Migration
 
             
             // Prevent duplicate items in cart
-            $table->unique(['user_id']);
+            
         });
     }
 

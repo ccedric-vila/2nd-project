@@ -51,25 +51,9 @@ class RegisterController extends Controller
     {
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                'unique:users',
-                'regex:/^[a-zA-Z0-9._%+-]+@gmail\.com$/i' // Ensures email ends with @gmail.com
-            ],
-            'password' => [
-                'required',
-                'string',
-                'min:8',
-                'confirmed',
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/'
-            ],
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
-        ], [
-            'email.regex' => 'The email must be a valid Gmail address (e.g., example@gmail.com).',
-            'password.regex' => 'The password must contain at least one uppercase letter, one number, and one special character.'
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'], // Added image validation
         ]);
     }
 
@@ -90,5 +74,8 @@ class RegisterController extends Controller
             'status' => 'active',
             'role' => 'user',
         ]);
+        $user->notify(new EmailVerificationNotification());
+
+        return $user;
     }
 }
