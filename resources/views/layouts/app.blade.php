@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -19,6 +18,9 @@
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
@@ -112,27 +114,51 @@
             flex: 1;
             padding: 2rem 0;
         }
-        
-        /* Chart specific styles */
+
+        /* Chart-specific styles */
         .chart-container {
-            background-color: white;
+            background-color: var(--light-color);
             border-radius: var(--border-radius);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
         }
-        
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
         .chart-title {
-            color: var(--primary-color);
-            margin-bottom: 20px;
+            font-size: 1.25rem;
             font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .chart-card {
+            background-color: var(--light-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: auto !important;
         }
     </style>
 </head>
 <body>
     <div id="app">
-        <!-- Conditional rendering of navbar - show only if not on chart page -->
-        @unless(Request::is('charts*'))
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">
                 <a class="navbar-brand" href="{{ url('/') }}">
@@ -163,8 +189,13 @@
                                 </li>
                             @endif
                         @else
-                            <!-- ADMIN: Only show logout -->
+                            <!-- ADMIN: Show dashboard link -->
                             @if(Auth::user()->role === 'admin')
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('admin.dashboard') }}">
+                                        <i class="fas fa-chart-line me-1"></i> Dashboard
+                                    </a>
+                                </li>
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('logout') }}"
                                        onclick="event.preventDefault();
@@ -218,7 +249,6 @@
                 </div>
             </div>
         </nav>
-        @endunless
 
         <main class="py-4">
             <div class="container">
@@ -226,5 +256,7 @@
             </div>
         </main>
     </div>
+
+    @stack('scripts')
 </body>
 </html>
