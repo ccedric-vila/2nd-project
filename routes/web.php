@@ -16,6 +16,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\Admin\SaleController;
+use App\Http\Controllers\Admin\SalesAnalyticsController;
 
 use App\Mail\WelcomeEmail;
 use Illuminate\Support\Facades\Mail;
@@ -81,6 +83,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('reviews', [ManageReviewController::class, 'index'])->name('reviews.index');
     Route::get('reviews/{review}', [ManageReviewController::class, 'show'])->name('reviews.show');
     Route::delete('reviews/{review}', [ManageReviewController::class, 'destroy'])->name('reviews.destroy');
+
+     //SALES
+     Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
+
+     Route::get('/sales-analytics', [SalesAnalyticsController::class, 'index'])->name('sales.analytics');
+     Route::get('/sales-analytics/data', [SalesAnalyticsController::class, 'getChartData'])->name('sales.analytics.data');
 });
 
 // User Routes (strictly for user role only)

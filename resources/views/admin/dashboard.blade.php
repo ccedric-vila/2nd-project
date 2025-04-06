@@ -49,6 +49,10 @@
                             <a href="{{ route('admin.orders.index') }}" class="btn btn-danger btn-lg mb-3 animate__animated animate__fadeInRight" style="min-width: 200px;">
                                 <i class="fas fa-shopping-cart mr-2"></i> Manage Orders
                             </a>
+                            </a>
+                            <a href="{{ route('admin.sales.index') }}" class="btn btn-secondary btn-lg mb-3 animate__animated animate__fadeInUp" style="min-width: 200px;">
+                                <i class="fas fa-receipt mr-2"></i> Sales Records
+                            </a>
                             <a href="{{ route('admin.reviews.index') }}" class="btn btn-danger btn-lg mb-3 animate__animated animate__fadeInRight" style="min-width: 200px;">
                                 <i class="fas fa-star mr-2"></i> Manage Product Reviews
                             </a>

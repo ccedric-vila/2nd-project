@@ -29,25 +29,42 @@ class Sale extends Model
     // Relationships
     public function order()
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Order::class, 'order_id');
     }
 
     public function orderLine()
     {
-        return $this->belongsTo(OrderLine::class);
+        return $this->belongsTo(OrderLine::class, 'order_line_id');
     }
 
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class, 'product_id', 'product_id');
     }
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Helper method to create sales records from completed orders
+    // Scopes for filtering
+    public function scopeFilterByMonth($query, $month)
+    {
+        if ($month > 0) {
+            return $query->whereMonth('sale_date', $month);
+        }
+        return $query;
+    }
+
+    public function scopeFilterByYear($query, $year)
+    {
+        if ($year) {
+            return $query->whereYear('sale_date', $year);
+        }
+        return $query;
+    }
+
+    // Helper method to create sales records
     public static function createFromOrder(Order $order)
     {
         foreach ($order->orderLines as $line) {
