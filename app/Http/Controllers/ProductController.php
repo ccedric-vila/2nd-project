@@ -68,10 +68,19 @@ class ProductController extends Controller
             }
         }
 
-        return redirect()->route('admin.product.index')
-            ->with('success', 'Product created successfully.');
+        try {
+            // ... your existing import logic ...
+            
+            return redirect()
+                ->route('admin.product.index') // Matches the route defined above
+                ->with('success', $message);
+                
+        } catch (\Exception $e) {
+            return back()
+                ->with('error', 'Import failed: ' . $e->getMessage())
+                ->withInput();
+        }
     }
-
     /**
      * Display the specified product.
      */
@@ -167,112 +176,49 @@ class ProductController extends Controller
         return redirect()->route('admin.product.index')
             ->with('success', 'Product deleted successfully.');
     }
+
+
     public function showImportForm()
     {
         $suppliers = Supplier::orderBy('brand_name')
-                            ->select('supplier_id', 'brand_name')
-                            ->get();
+            ->select('supplier_id', 'brand_name')
+            ->get();
         
         return view('admin.product.import', compact('suppliers'));
     }
 
     public function import(Request $request)
     {
-        $request->validate([
-            'supplier_id' => 'required|exists:supplier,supplier_id',
-            'file' => 'required|file|mimes:xlsx,xls,csv|max:5120'
-        ]);
-
         try {
             $supplier = Supplier::findOrFail($request->supplier_id);
             
             $import = new ProductsImport($request->supplier_id);
             Excel::import($import, $request->file('file'));
             
-            $successCount = $import->getImportCount();
-            $skippedRows = $import->getSkippedRows();
-            $processedCount = $import->getProcessedCount();
-            $importedProducts = $import->getImportedProducts();
+            $results = $import->getImportResults();
 
-            // Build comprehensive status message
-            $message = "Processed {$processedCount} rows. ";
-            $message .= "Successfully imported {$successCount} products for {$supplier->brand_name}.";
-            
-            if (!empty($skippedRows)) {
-                $skippedCount = count($skippedRows);
-                $message .= " Skipped {$skippedCount} row" . ($skippedCount > 1 ? 's' : '') . " due to:";
+            $message = "Successfully imported {$results['success_count']} products for {$supplier->brand_name}";
+
+            if (!empty($results['skipped_rows'])) {
+                $message .= ". Skipped " . count($results['skipped_rows']) . " rows due to errors.";
                 
-                // Categorize skipped rows by error type
-                $errorSummary = [];
-                foreach ($skippedRows as $row) {
-                    foreach ($row['errors'] as $error) {
-                        $errorSummary[$error] = ($errorSummary[$error] ?? 0) + 1;
-                    }
-                }
-                
-                foreach ($errorSummary as $error => $count) {
-                    $message .= " {$count} " . strtolower($error);
-                }
-                
-                // Format skipped rows for detailed display
-                $formattedSkippedRows = array_map(function($row) {
+                // Format errors for display
+                $formattedErrors = array_map(function($error) use ($results) {
                     return [
-                        'row' => $row['row'],
-                        'errors' => implode('; ', $row['errors']),
-                        'product_name' => $row['values']['product_name'] ?? 'N/A',
-                        'category' => $row['values']['category'] ?? 'N/A',
-                        'types' => $row['values']['types'] ?? 'N/A',
-                        'cost_price' => $row['values']['cost_price'] ?? 'N/A',
-                        'sell_price' => $row['values']['sell_price'] ?? 'N/A'
+                        'product' => $error['row']['product_name'] ?? 'Unknown',
+                        'error' => $error['error'],
+                        'allowed_types' => implode(', ', $results['allowed_types'])
                     ];
-                }, $skippedRows);
+                }, $results['skipped_rows']);
                 
-                session()->flash('skipped_rows_details', $formattedSkippedRows);
+                session()->flash('import_errors', $formattedErrors);
             }
-
-            session()->flash('imported_products', $importedProducts);
 
             return redirect()
-                ->route('admin.products.index')
-                ->with([
-                    'success' => $message,
-                    'stats' => [
-                        'processed' => $processedCount,
-                        'imported' => $successCount,
-                        'skipped' => count($skippedRows ?? [])
-                    ]
-                ]);
-
-        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-            $errors = collect($e->failures())->map(function($failure) {
-                return [
-                    'row' => $failure->row(),
-                    'field' => $failure->attribute(),
-                    'errors' => $failure->errors(),
-                    'value' => $failure->values()[$failure->attribute()] ?? null
-                ];
-            });
-
-            // Group errors by row for cleaner display
-            $groupedErrors = [];
-            foreach ($errors as $error) {
-                $groupedErrors[$error['row']][] = $error;
-            }
-
-            return back()
-                ->with([
-                    'import_errors' => $groupedErrors,
-                    'error' => 'Validation failed for ' . count($errors) . ' rows'
-                ])
-                ->withInput();
+                ->route('admin.product.index')
+                ->with('success', $message);
 
         } catch (\Exception $e) {
-            \Log::error('Product Import Error', [
-                'exception' => $e->getMessage(),
-                'supplier' => $request->supplier_id,
-                'file' => $request->file('file')->getClientOriginalName()
-            ]);
-
             return back()
                 ->with('error', 'Import failed: ' . $e->getMessage())
                 ->withInput();

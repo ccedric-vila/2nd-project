@@ -5,7 +5,7 @@
             <h1 class="h2">Product Import</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="<?php echo e(route('admin.product.index')); ?>">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="<?php echo e(route('admin.product.index')); ?>">Products</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Import</li>
                 </ol>
@@ -15,9 +15,7 @@
             <a href="<?php echo e(route('admin.product.index')); ?>" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Back to Products
             </a>
-            <a href="<?php echo e(asset('storage/templates/product_import_template.xlsx')); ?>" class="btn btn-outline-primary ml-2">
-                <i class="fas fa-file-download"></i> Download Template
-            </a>
+            
         </div>
     </div>
 
@@ -27,13 +25,13 @@
         </div>
 
         <div class="card-body">
-            <!-- Processing Alert (shown during submission) -->
+            <!-- Processing Alert -->
             <div class="alert alert-info alert-dismissible fade show alert-processing" style="display: none;">
                 <i class="fas fa-spinner fa-spin mr-2"></i>
                 Your import is being processed. This may take a few moments...
             </div>
 
-            
+            <!-- Success Message -->
             <?php if(session('success')): ?>
             <div class="alert alert-success alert-dismissible fade show">
                 <div class="d-flex align-items-center">
@@ -56,7 +54,7 @@
             </div>
             <?php endif; ?>
 
-            
+            <!-- Skipped Rows -->
             <?php if(session('skipped_rows_details')): ?>
             <div class="alert alert-warning">
                 <h5><i class="fas fa-exclamation-triangle"></i> Skipped Rows Details</h5>
@@ -66,17 +64,24 @@
                             <tr>
                                 <th>Row #</th>
                                 <th>Product</th>
-                                <th>Issue</th>
-                                <th>Value</th>
+                                <th>Cost Price</th>
+                                <th>Sell Price</th>
+                                <th>Difference</th>
+                                <th>Error</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php $__currentLoopData = session('skipped_rows_details'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr>
                                 <td><?php echo e($row['row']); ?></td>
-                                <td><?php echo e($row['product_name']); ?></td>
-                                <td><?php echo e($row['errors']); ?></td>
-                                <td><?php echo e($row['category']); ?></td>
+                                <td><?php echo e($row['product']); ?></td>
+                                <td><?php echo e($row['cost_price']); ?></td>
+                                <td><?php echo e($row['sell_price']); ?></td>
+                                <td class="<?php echo e(str_starts_with($row['difference'], '+') ? 'text-success' : 'text-danger'); ?>">
+                                    <?php echo e($row['difference']); ?>
+
+                                </td>
+                                <td><?php echo e($row['error']); ?></td>
                             </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
@@ -85,43 +90,20 @@
             </div>
             <?php endif; ?>
 
-            
-            <?php if(session('import_errors')): ?>
-            <div class="alert alert-danger">
-                <h5><i class="fas fa-times-circle"></i> Validation Errors</h5>
-                <ul class="mb-0">
-                    <?php $__currentLoopData = session('import_errors'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row => $errors): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <li>
-                        <strong>Row <?php echo e($row); ?>:</strong>
-                        <ul>
-                            <?php $__currentLoopData = $errors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <li><?php echo e($error['field']); ?> (<?php echo e($error['value']); ?>): <?php echo e(implode(', ', $error['errors'])); ?></li>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                        </ul>
-                    </li>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                </ul>
-            </div>
-            <?php endif; ?>
-
             <!-- Import Errors -->
-            <?php if(session('import_errors')): ?>
-                <div class="alert alert-danger alert-dismissible fade show mb-4">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-times-circle fa-2x mr-3 text-danger"></i>
-                        <div>
-                            <h5 class="alert-heading mb-2">Import Errors</h5>
-                            <ul class="mb-0 pl-3">
-                                <?php $__currentLoopData = session('import_errors'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <li><?php echo e($error); ?></li>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                            </ul>
-                        </div>
+            <?php if(session('error')): ?>
+            <div class="alert alert-danger alert-dismissible fade show">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-times-circle fa-2x mr-3"></i>
+                    <div>
+                        <h5 class="alert-heading">Import Failed</h5>
+                        <p class="mb-0"><?php echo e(session('error')); ?></p>
                     </div>
-                    <button type="button" class="close" data-dismiss="alert">
-                        <span>&times;</span>
-                    </button>
                 </div>
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
             <?php endif; ?>
 
             <!-- Import Form -->
@@ -215,7 +197,7 @@
                                         <td>types</td>
                                         <td><span class="badge badge-secondary">No</span></td>
                                         <td>Text</td>
-                                        <td>T-shirt, Polo Shirt, Sweater, etc.</td>
+                                        <td>T-shirt, Polo Shirt, Sweater, Hoodie, Jersey, Dress, Sweatshirt, Pants, Shorts</td>
                                         <td>T-shirt</td>
                                     </tr>
                                     <tr>
@@ -253,9 +235,10 @@
                         <div class="alert alert-warning mt-3">
                             <h5 class="alert-heading"><i class="fas fa-exclamation-triangle mr-2"></i>Important Notes:</h5>
                             <ul class="mb-0">
-                                <li>The first row should contain column headers exactly as shown above</li>
-                                <li>Empty cells will use default values where applicable</li>
-                                <li>Duplicate product names will be treated as separate products</li>
+                                <li>The first row must contain column headers exactly as shown</li>
+                                <li>Sell price must be greater than or equal to cost price</li>
+                                <li>Price values should be numbers only (no currency symbols)</li>
+                                <li>Product types must match exactly with the allowed values</li>
                                 <li>For best results, use the provided template file</li>
                             </ul>
                         </div>
@@ -270,7 +253,7 @@
 <?php $__env->startSection('scripts'); ?>
 <script>
     $(document).ready(function() {
-        // Initialize Select2 for supplier dropdown
+        // Initialize Select2
         $('.select2').select2({
             placeholder: 'Select a supplier',
             theme: 'bootstrap4'
@@ -284,17 +267,14 @@
 
         // Form submission handling
         $('#importForm').on('submit', function() {
-            // Show processing alert
             $('.alert-processing').fadeIn();
-            
-            // Disable submit button
             $('#submitBtn')
                 .prop('disabled', true)
                 .html('<i class="fas fa-spinner fa-spin mr-2"></i> Importing...');
         });
 
-        // Auto-expand error sections if they exist
-        <?php if(session('import_errors') || $errors->any()): ?>
+        // Auto-expand instructions if errors exist
+        <?php if(session('skipped_rows_details') || session('error')): ?>
             $(window).on('load', function() {
                 $('#instructionsCollapse').collapse('show');
             });
@@ -315,22 +295,18 @@
     .table th {
         white-space: nowrap;
     }
-    #instructionsCollapse {
-        transition: all 0.3s ease;
-    }
-    .alert .fa-2x {
-        margin-top: -0.25rem;
-        margin-bottom: -0.25rem;
-    }
-    pre {
-        background-color: #f8f9fa;
-        padding: 0.5rem;
-        border-radius: 0.25rem;
-        margin-bottom: 0;
-        white-space: pre-wrap;
-    }
     .alert-processing {
         border-left: 4px solid #17a2b8;
+    }
+    .text-danger {
+        font-weight: bold;
+    }
+    .text-success {
+        font-weight: bold;
+    }
+    .badge {
+        font-size: 0.85em;
+        padding: 0.35em 0.65em;
     }
 </style>
 <?php $__env->stopSection(); ?>

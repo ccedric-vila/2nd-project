@@ -7,7 +7,7 @@
             <h1 class="h2">Product Import</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.product.index') }}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('admin.product.index') }}">Products</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Import</li>
                 </ol>
@@ -17,9 +17,7 @@
             <a href="{{ route('admin.product.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Back to Products
             </a>
-            <a href="{{ asset('storage/templates/product_import_template.xlsx') }}" class="btn btn-outline-primary ml-2">
-                <i class="fas fa-file-download"></i> Download Template
-            </a>
+            
         </div>
     </div>
 
@@ -29,13 +27,13 @@
         </div>
 
         <div class="card-body">
-            <!-- Processing Alert (shown during submission) -->
+            <!-- Processing Alert -->
             <div class="alert alert-info alert-dismissible fade show alert-processing" style="display: none;">
                 <i class="fas fa-spinner fa-spin mr-2"></i>
                 Your import is being processed. This may take a few moments...
             </div>
 
-            
+            <!-- Success Message -->
             @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show">
                 <div class="d-flex align-items-center">
@@ -58,7 +56,7 @@
             </div>
             @endif
 
-            {{-- Skipped Rows --}}
+            <!-- Skipped Rows -->
             @if(session('skipped_rows_details'))
             <div class="alert alert-warning">
                 <h5><i class="fas fa-exclamation-triangle"></i> Skipped Rows Details</h5>
@@ -68,17 +66,23 @@
                             <tr>
                                 <th>Row #</th>
                                 <th>Product</th>
-                                <th>Issue</th>
-                                <th>Value</th>
+                                <th>Cost Price</th>
+                                <th>Sell Price</th>
+                                <th>Difference</th>
+                                <th>Error</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach(session('skipped_rows_details') as $row)
                             <tr>
                                 <td>{{ $row['row'] }}</td>
-                                <td>{{ $row['product_name'] }}</td>
-                                <td>{{ $row['errors'] }}</td>
-                                <td>{{ $row['category'] }}</td>
+                                <td>{{ $row['product'] }}</td>
+                                <td>{{ $row['cost_price'] }}</td>
+                                <td>{{ $row['sell_price'] }}</td>
+                                <td class="{{ str_starts_with($row['difference'], '+') ? 'text-success' : 'text-danger' }}">
+                                    {{ $row['difference'] }}
+                                </td>
+                                <td>{{ $row['error'] }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -87,43 +91,20 @@
             </div>
             @endif
 
-            {{-- Validation Errors --}}
-            @if(session('import_errors'))
-            <div class="alert alert-danger">
-                <h5><i class="fas fa-times-circle"></i> Validation Errors</h5>
-                <ul class="mb-0">
-                    @foreach(session('import_errors') as $row => $errors)
-                    <li>
-                        <strong>Row {{ $row }}:</strong>
-                        <ul>
-                            @foreach($errors as $error)
-                            <li>{{ $error['field'] }} ({{ $error['value'] }}): {{ implode(', ', $error['errors']) }}</li>
-                            @endforeach
-                        </ul>
-                    </li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
-
             <!-- Import Errors -->
-            @if (session('import_errors'))
-                <div class="alert alert-danger alert-dismissible fade show mb-4">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-times-circle fa-2x mr-3 text-danger"></i>
-                        <div>
-                            <h5 class="alert-heading mb-2">Import Errors</h5>
-                            <ul class="mb-0 pl-3">
-                                @foreach (session('import_errors') as $error)
-                                <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
+            @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-times-circle fa-2x mr-3"></i>
+                    <div>
+                        <h5 class="alert-heading">Import Failed</h5>
+                        <p class="mb-0">{{ session('error') }}</p>
                     </div>
-                    <button type="button" class="close" data-dismiss="alert">
-                        <span>&times;</span>
-                    </button>
                 </div>
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
             @endif
 
             <!-- Import Form -->
@@ -216,7 +197,7 @@
                                         <td>types</td>
                                         <td><span class="badge badge-secondary">No</span></td>
                                         <td>Text</td>
-                                        <td>T-shirt, Polo Shirt, Sweater, etc.</td>
+                                        <td>T-shirt, Polo Shirt, Sweater, Hoodie, Jersey, Dress, Sweatshirt, Pants, Shorts</td>
                                         <td>T-shirt</td>
                                     </tr>
                                     <tr>
@@ -254,9 +235,10 @@
                         <div class="alert alert-warning mt-3">
                             <h5 class="alert-heading"><i class="fas fa-exclamation-triangle mr-2"></i>Important Notes:</h5>
                             <ul class="mb-0">
-                                <li>The first row should contain column headers exactly as shown above</li>
-                                <li>Empty cells will use default values where applicable</li>
-                                <li>Duplicate product names will be treated as separate products</li>
+                                <li>The first row must contain column headers exactly as shown</li>
+                                <li>Sell price must be greater than or equal to cost price</li>
+                                <li>Price values should be numbers only (no currency symbols)</li>
+                                <li>Product types must match exactly with the allowed values</li>
                                 <li>For best results, use the provided template file</li>
                             </ul>
                         </div>
@@ -271,7 +253,7 @@
 @section('scripts')
 <script>
     $(document).ready(function() {
-        // Initialize Select2 for supplier dropdown
+        // Initialize Select2
         $('.select2').select2({
             placeholder: 'Select a supplier',
             theme: 'bootstrap4'
@@ -285,17 +267,14 @@
 
         // Form submission handling
         $('#importForm').on('submit', function() {
-            // Show processing alert
             $('.alert-processing').fadeIn();
-            
-            // Disable submit button
             $('#submitBtn')
                 .prop('disabled', true)
                 .html('<i class="fas fa-spinner fa-spin mr-2"></i> Importing...');
         });
 
-        // Auto-expand error sections if they exist
-        @if (session('import_errors') || $errors->any())
+        // Auto-expand instructions if errors exist
+        @if (session('skipped_rows_details') || session('error'))
             $(window).on('load', function() {
                 $('#instructionsCollapse').collapse('show');
             });
@@ -316,22 +295,18 @@
     .table th {
         white-space: nowrap;
     }
-    #instructionsCollapse {
-        transition: all 0.3s ease;
-    }
-    .alert .fa-2x {
-        margin-top: -0.25rem;
-        margin-bottom: -0.25rem;
-    }
-    pre {
-        background-color: #f8f9fa;
-        padding: 0.5rem;
-        border-radius: 0.25rem;
-        margin-bottom: 0;
-        white-space: pre-wrap;
-    }
     .alert-processing {
         border-left: 4px solid #17a2b8;
+    }
+    .text-danger {
+        font-weight: bold;
+    }
+    .text-success {
+        font-weight: bold;
+    }
+    .badge {
+        font-size: 0.85em;
+        padding: 0.35em 0.65em;
     }
 </style>
 @endsection
