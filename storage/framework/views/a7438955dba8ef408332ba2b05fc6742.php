@@ -1,6 +1,4 @@
-@extends('layouts.app')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col-12">
@@ -8,30 +6,30 @@
                 <div class="card-header bg-gradient-primary p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <a href="{{ route('admin.dashboard') }}" class="btn btn-light btn-sm px-3 shadow-sm">
+                            <a href="<?php echo e(route('admin.dashboard')); ?>" class="btn btn-light btn-sm px-3 shadow-sm">
                                 <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
                             </a>
-                            <a href="{{ route('admin.products.import') }}" class="btn btn-info btn-sm px-3 shadow-sm ms-2">
+                            <a href="<?php echo e(route('admin.products.import')); ?>" class="btn btn-info btn-sm px-3 shadow-sm ms-2">
                                 <i class="fas fa-file-import me-2"></i> Import Products
                             </a>
                         </div>
                         <h2 class="text-white m-0 fw-bold">Product Management</h2>
-                        <a href="{{ route('admin.product.create') }}" class="btn btn-success btn-sm px-3 shadow-sm">
+                        <a href="<?php echo e(route('admin.product.create')); ?>" class="btn btn-success btn-sm px-3 shadow-sm">
                             <i class="fas fa-plus me-2"></i> Add New Product
                         </a>
                     </div>
                 </div>
 
                 <div class="card-body p-0">
-                    @if(session('success'))
+                    <?php if(session('success')): ?>
                         <div class="alert alert-success alert-dismissible fade show m-3 border-left border-success border-4">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-check-circle me-2 text-success fa-lg"></i>
-                                <span>{{ session('success') }}</span>
+                                <span><?php echo e(session('success')); ?></span>
                             </div>
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
-                    @endif
+                    <?php endif; ?>
 
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
@@ -47,81 +45,86 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($product as $productItem)
+                                <?php $__empty_1 = true; $__currentLoopData = $product; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $productItem): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                     <tr class="border-top">
                                         <td class="px-4 py-3">
-                                            @if($productItem->images->isNotEmpty())
+                                            <?php if($productItem->images->isNotEmpty()): ?>
                                                 <div class="product-img-container">
-                                                    <img src="{{ asset('storage/' . $productItem->images->first()->image_path) }}" 
-                                                        alt="{{ $productItem->product_name }}" 
+                                                    <img src="<?php echo e(asset('storage/' . $productItem->images->first()->image_path)); ?>" 
+                                                        alt="<?php echo e($productItem->product_name); ?>" 
                                                         class="img-thumbnail rounded shadow-sm" 
                                                         width="80"
                                                         style="object-fit: cover; height: 80px;">
                                                 </div>
-                                            @else
+                                            <?php else: ?>
                                                 <div class="bg-light rounded d-flex align-items-center justify-content-center shadow-sm" 
                                                     style="width: 80px; height: 80px;">
                                                     <i class="fas fa-image text-muted fa-2x"></i>
                                                 </div>
-                                            @endif
+                                            <?php endif; ?>
                                         </td>
                                         <td class="px-4 py-3">
                                             <div class="d-flex flex-column">
-                                                <span class="fw-bold">{{ $productItem->product_name }}</span>
-                                                <span class="badge bg-light text-muted rounded-pill">ID: {{ $productItem->product_id }}</span>
+                                                <span class="fw-bold"><?php echo e($productItem->product_name); ?></span>
+                                                <span class="badge bg-light text-muted rounded-pill">ID: <?php echo e($productItem->product_id); ?></span>
                                             </div>
                                         </td>
                                         <td class="px-4 py-3">
-                                            @if($productItem->supplier)
-                                                <span class="d-inline-block text-truncate" style="max-width: 150px;" title="{{ $productItem->supplier->brand_name }}">
-                                                    <i class="fas fa-building me-1 text-muted"></i> {{ $productItem->supplier->brand_name }}
+                                            <?php if($productItem->supplier): ?>
+                                                <span class="d-inline-block text-truncate" style="max-width: 150px;" title="<?php echo e($productItem->supplier->brand_name); ?>">
+                                                    <i class="fas fa-building me-1 text-muted"></i> <?php echo e($productItem->supplier->brand_name); ?>
+
                                                 </span>
-                                            @else
+                                            <?php else: ?>
                                                 <span class="badge bg-danger text-white rounded-pill">
                                                     <i class="fas fa-exclamation-circle me-1"></i> No Supplier
                                                 </span>
-                                            @endif
+                                            <?php endif; ?>
                                         </td>
                                         <td class="px-4 py-3">
                                             <div class="d-flex flex-wrap gap-1">
                                                 <span class="badge rounded-pill bg-light text-dark border shadow-sm">
-                                                    <i class="fas fa-ruler me-1 text-primary"></i> {{ $productItem->size }}
+                                                    <i class="fas fa-ruler me-1 text-primary"></i> <?php echo e($productItem->size); ?>
+
                                                 </span>
                                                 <span class="badge rounded-pill bg-light text-dark border shadow-sm">
-                                                    <i class="fas fa-tag me-1 text-info"></i> {{ $productItem->category }}
+                                                    <i class="fas fa-tag me-1 text-info"></i> <?php echo e($productItem->category); ?>
+
                                                 </span>
                                                 <span class="badge rounded-pill bg-light text-dark border shadow-sm">
-                                                    <i class="fas fa-layer-group me-1 text-secondary"></i> {{ $productItem->types }}
+                                                    <i class="fas fa-layer-group me-1 text-secondary"></i> <?php echo e($productItem->types); ?>
+
                                                 </span>
                                             </div>
                                         </td>
                                         <td class="px-4 py-3">
                                             <div class="pricing-details">
-                                                <div class="mb-1">Cost: <span class="fw-bold text-muted">₱{{ number_format($productItem->cost_price, 2) }}</span></div>
-                                                <div class="mb-1">Sell: <span class="fw-bold">₱{{ number_format($productItem->sell_price, 2) }}</span></div>
-                                                <div class="small px-2 py-1 rounded {{ $productItem->sell_price > $productItem->cost_price ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">
-                                                    <i class="fas {{ $productItem->sell_price > $productItem->cost_price ? 'fa-arrow-up' : 'fa-arrow-down' }} me-1"></i>
-                                                    Margin: ₱{{ number_format($productItem->sell_price - $productItem->cost_price, 2) }}
+                                                <div class="mb-1">Cost: <span class="fw-bold text-muted">₱<?php echo e(number_format($productItem->cost_price, 2)); ?></span></div>
+                                                <div class="mb-1">Sell: <span class="fw-bold">₱<?php echo e(number_format($productItem->sell_price, 2)); ?></span></div>
+                                                <div class="small px-2 py-1 rounded <?php echo e($productItem->sell_price > $productItem->cost_price ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'); ?>">
+                                                    <i class="fas <?php echo e($productItem->sell_price > $productItem->cost_price ? 'fa-arrow-up' : 'fa-arrow-down'); ?> me-1"></i>
+                                                    Margin: ₱<?php echo e(number_format($productItem->sell_price - $productItem->cost_price, 2)); ?>
+
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="px-4 py-3">
                                             <div class="stock-indicator">
-                                                <span class="badge rounded-pill bg-{{ $productItem->stock > 10 ? 'success' : ($productItem->stock > 0 ? 'warning' : 'danger') }} text-white shadow-sm">
-                                                    <i class="fas {{ $productItem->stock > 10 ? 'fa-box-full' : ($productItem->stock > 0 ? 'fa-box-open' : 'fa-box') }} me-1"></i>
-                                                    {{ $productItem->stock }} in stock
+                                                <span class="badge rounded-pill bg-<?php echo e($productItem->stock > 10 ? 'success' : ($productItem->stock > 0 ? 'warning' : 'danger')); ?> text-white shadow-sm">
+                                                    <i class="fas <?php echo e($productItem->stock > 10 ? 'fa-box-full' : ($productItem->stock > 0 ? 'fa-box-open' : 'fa-box')); ?> me-1"></i>
+                                                    <?php echo e($productItem->stock); ?> in stock
                                                 </span>
                                             </div>
                                         </td>
                                         <td class="px-4 py-3">
                                             <div class="d-flex justify-content-center gap-2">
-                                                <a href="{{ route('admin.product.edit', $productItem->product_id) }}" 
+                                                <a href="<?php echo e(route('admin.product.edit', $productItem->product_id)); ?>" 
                                                 class="btn btn-primary btn-sm rounded-circle shadow-sm" title="Edit Product">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <form action="{{ route('admin.product.destroy', $productItem->product_id) }}" method="POST">
-                                                    @csrf
-                                                    @method('DELETE')
+                                                <form action="<?php echo e(route('admin.product.destroy', $productItem->product_id)); ?>" method="POST">
+                                                    <?php echo csrf_field(); ?>
+                                                    <?php echo method_field('DELETE'); ?>
                                                     <button type="submit" class="btn btn-danger btn-sm rounded-circle shadow-sm" 
                                                             onclick="return confirm('Are you sure you want to delete this product?')"
                                                             title="Delete Product">
@@ -131,37 +134,38 @@
                                             </div>
                                         </td>
                                     </tr>
-                                @empty
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <tr>
                                         <td colspan="7" class="text-center py-5">
                                             <div class="empty-state">
                                                 <i class="fas fa-box-open text-muted fa-4x mb-3"></i>
                                                 <h5 class="text-muted">No products found.</h5>
                                                 <p class="text-muted">Get started by adding your first product to inventory.</p>
-                                                <a href="{{ route('admin.product.create') }}" class="btn btn-primary mt-2 shadow-sm">
+                                                <a href="<?php echo e(route('admin.product.create')); ?>" class="btn btn-primary mt-2 shadow-sm">
                                                     <i class="fas fa-plus me-2"></i> Add Your First Product
                                                 </a>
                                             </div>
                                         </td>
                                     </tr>
-                                @endforelse
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
 
-                    @if($product->hasPages())
+                    <?php if($product->hasPages()): ?>
                         <div class="d-flex justify-content-center py-4">
-                            {{ $product->links() }}
+                            <?php echo e($product->links()); ?>
+
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('styles')
+<?php $__env->startSection('styles'); ?>
 <style>
     /* Custom styling */
     body {
@@ -344,4 +348,5 @@
         content: "\f49f"; /* This is for the full box icon */
     }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp5\htdocs\stylesphere\resources\views/admin/product/index.blade.php ENDPATH**/ ?>

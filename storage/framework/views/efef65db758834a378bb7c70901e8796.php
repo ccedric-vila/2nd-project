@@ -1,11 +1,11 @@
-@php use App\Models\Review; @endphp
-@extends('layouts.app')
+<?php use App\Models\Review; ?>
 
-@section('content')
+
+<?php $__env->startSection('content'); ?>
 <div class="container-fluid px-4">
     <!-- Back to Dashboard Button -->
     <div class="my-4">
-        <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary rounded-pill">
+        <a href="<?php echo e(route('admin.dashboard')); ?>" class="btn btn-outline-secondary rounded-pill">
             <i class="fas fa-arrow-left mr-2"></i>Dashboard
         </a>
     </div>
@@ -25,11 +25,12 @@
                             <label class="form-label small">Rating</label>
                             <select class="form-select" id="ratingFilter">
                                 <option value="">All Ratings</option>
-                                @for($i = 1; $i <= 5; $i++)
-                                    <option value="{{ $i }}" {{ request('rating') == $i ? 'selected' : '' }}>
-                                        {{ $i }} Star{{ $i > 1 ? 's' : '' }}
+                                <?php for($i = 1; $i <= 5; $i++): ?>
+                                    <option value="<?php echo e($i); ?>" <?php echo e(request('rating') == $i ? 'selected' : ''); ?>>
+                                        <?php echo e($i); ?> Star<?php echo e($i > 1 ? 's' : ''); ?>
+
                                     </option>
-                                @endfor
+                                <?php endfor; ?>
                             </select>
                         </div>
                         <button class="btn btn-sm btn-primary w-100" id="applyFilters">Apply</button>
@@ -50,7 +51,7 @@
                                 </div>
                                 <div>
                                     <div class="small">Average Rating</div>
-                                    <div class="h5 fw-bold">{{ $averageRating ?? 0 }}/5</div>
+                                    <div class="h5 fw-bold"><?php echo e($averageRating ?? 0); ?>/5</div>
                                 </div>
                             </div>
                         </div>
@@ -65,7 +66,7 @@
                                 </div>
                                 <div>
                                     <div class="small">Total Reviews</div>
-                                    <div class="h5 fw-bold">{{ $totalReviews }}</div>
+                                    <div class="h5 fw-bold"><?php echo e($totalReviews); ?></div>
                                 </div>
                             </div>
                         </div>
@@ -87,39 +88,39 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($reviews as $review)
+                        <?php $__empty_1 = true; $__currentLoopData = $reviews; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $review): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    @isset($review->product->image_url)
-                                    <img src="{{ $review->product->image_url }}" alt="{{ $review->product->product_name ?? 'Product image' }}" 
+                                    <?php if(isset($review->product->image_url)): ?>
+                                    <img src="<?php echo e($review->product->image_url); ?>" alt="<?php echo e($review->product->product_name ?? 'Product image'); ?>" 
                                          class="rounded me-2" width="40" height="40" style="object-fit: cover;">
-                                    @endisset
+                                    <?php endif; ?>
                                     <div>
-                                        <div class="fw-bold">{{ Str::limit($review->product->product_name ?? 'N/A', 20) }}</div>
-                                        <small class="text-muted">{{ $review->product->types ?? '' }}</small>
+                                        <div class="fw-bold"><?php echo e(Str::limit($review->product->product_name ?? 'N/A', 20)); ?></div>
+                                        <small class="text-muted"><?php echo e($review->product->types ?? ''); ?></small>
                                     </div>
                                 </div>
                             </td>
-                            <td>{{ $review->user->name ?? 'N/A' }}</td>
+                            <td><?php echo e($review->user->name ?? 'N/A'); ?></td>
                             <td>
                                 <div class="star-rating">
-                                    @for($i = 1; $i <= 5; $i++)
-                                        <i class="fas fa-star {{ $i <= ($review->rating ?? 0) ? 'text-warning' : 'text-secondary' }}"></i>
-                                    @endfor
+                                    <?php for($i = 1; $i <= 5; $i++): ?>
+                                        <i class="fas fa-star <?php echo e($i <= ($review->rating ?? 0) ? 'text-warning' : 'text-secondary'); ?>"></i>
+                                    <?php endfor; ?>
                                 </div>
                             </td>
-                            <td>{{ Str::limit($review->comment ?? '', 50) }}</td>
-                            <td>{{ optional($review->created_at)->format('M d, Y') ?? 'N/A' }}</td>
+                            <td><?php echo e(Str::limit($review->comment ?? '', 50)); ?></td>
+                            <td><?php echo e(optional($review->created_at)->format('M d, Y') ?? 'N/A'); ?></td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ route('admin.reviews.show', $review) }}" class="btn btn-sm btn-outline-primary" 
+                                    <a href="<?php echo e(route('admin.reviews.show', $review)); ?>" class="btn btn-sm btn-outline-primary" 
                                        data-bs-toggle="tooltip" title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <form action="{{ route('admin.reviews.destroy', $review) }}" method="POST">
-                                        @csrf
-                                        @method('DELETE')
+                                    <form action="<?php echo e(route('admin.reviews.destroy', $review)); ?>" method="POST">
+                                        <?php echo csrf_field(); ?>
+                                        <?php echo method_field('DELETE'); ?>
                                         <button type="submit" class="btn btn-sm btn-outline-danger" 
                                                 data-bs-toggle="tooltip" title="Delete Review"
                                                 onclick="return confirm('Are you sure?')">
@@ -129,11 +130,11 @@
                                 </div>
                             </td>
                         </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr>
                             <td colspan="6" class="text-center py-4">No reviews found</td>
                         </tr>
-                        @endforelse
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -141,18 +142,19 @@
             <!-- Pagination -->
             <div class="d-flex justify-content-between align-items-center mt-3">
                 <div class="small text-muted">
-                    Showing {{ $reviews->firstItem() }} to {{ $reviews->lastItem() }} of {{ $reviews->total() }} reviews
+                    Showing <?php echo e($reviews->firstItem()); ?> to <?php echo e($reviews->lastItem()); ?> of <?php echo e($reviews->total()); ?> reviews
                 </div>
                 <div>
-                    {{ $reviews->links() }}
+                    <?php echo e($reviews->links()); ?>
+
                 </div>
             </div>
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('styles')
+<?php $__env->startPush('styles'); ?>
 <style>
     .star-rating {
         color: #ffc107;
@@ -172,9 +174,9 @@
         box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips
@@ -202,4 +204,5 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('applyFilters').addEventListener('click', applyFilters);
 });
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp5\htdocs\stylesphere\resources\views/admin/reviews/index.blade.php ENDPATH**/ ?>

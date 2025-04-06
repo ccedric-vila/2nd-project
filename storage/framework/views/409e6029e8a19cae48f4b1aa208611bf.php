@@ -1,13 +1,11 @@
-@extends('layouts.app')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container py-4">
     <!-- Header Section with Breadcrumbs -->
     <div class="row mb-4">
         <div class="col-12">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb bg-light p-2 rounded">
-                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="<?php echo e(route('admin.dashboard')); ?>">Dashboard</a></li>
                     <li class="breadcrumb-item active" aria-current="page">User Management</li>
                 </ol>
             </nav>
@@ -19,18 +17,20 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-white py-3">
                     <h5 class="mb-0">
-                        <i class="fas fa-users me-2"></i>{{ __('User Management') }}
+                        <i class="fas fa-users me-2"></i><?php echo e(__('User Management')); ?>
+
                     </h5>
                 </div>
 
                 <div class="card-body">
                     <!-- Display any success messages -->
-                    @if (session('status'))
+                    <?php if(session('status')): ?>
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="fas fa-check-circle me-2"></i> {{ session('status') }}
+                            <i class="fas fa-check-circle me-2"></i> <?php echo e(session('status')); ?>
+
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
-                    @endif
+                    <?php endif; ?>
 
                     <!-- Users Table -->
                     <div class="table-responsive">
@@ -44,39 +44,40 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($users as $user)
+                                <?php $__empty_1 = true; $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-circle bg-primary text-white me-2">
-                                                    {{ substr($user->name, 0, 1) }}
+                                                    <?php echo e(substr($user->name, 0, 1)); ?>
+
                                                 </div>
-                                                <div>{{ $user->name }}</div>
+                                                <div><?php echo e($user->name); ?></div>
                                             </div>
                                         </td>
-                                        <td>{{ $user->email }}</td>
+                                        <td><?php echo e($user->email); ?></td>
                                         <td>
-                                            <form action="{{ route('admin.users.updateStatus', $user->id) }}" method="POST">
-                                                @csrf
-                                                @method('POST')
+                                            <form action="<?php echo e(route('admin.users.updateStatus', $user->id)); ?>" method="POST">
+                                                <?php echo csrf_field(); ?>
+                                                <?php echo method_field('POST'); ?>
                                                 <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
-                                                    <option value="active" {{ $user->status === 'active' ? 'selected' : '' }}>Active</option>
-                                                    <option value="inactive" {{ $user->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                                    <option value="active" <?php echo e($user->status === 'active' ? 'selected' : ''); ?>>Active</option>
+                                                    <option value="inactive" <?php echo e($user->status === 'inactive' ? 'selected' : ''); ?>>Inactive</option>
                                                 </select>
                                             </form>
                                         </td>
                                         <td>
-                                            <form action="{{ route('admin.users.updateRole', $user->id) }}" method="POST">
-                                                @csrf
-                                                @method('POST')
+                                            <form action="<?php echo e(route('admin.users.updateRole', $user->id)); ?>" method="POST">
+                                                <?php echo csrf_field(); ?>
+                                                <?php echo method_field('POST'); ?>
                                                 <select name="role" class="form-select form-select-sm" onchange="this.form.submit()">
-                                                    <option value="user" {{ $user->role === 'user' ? 'selected' : '' }}>User</option>
-                                                    <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
+                                                    <option value="user" <?php echo e($user->role === 'user' ? 'selected' : ''); ?>>User</option>
+                                                    <option value="admin" <?php echo e($user->role === 'admin' ? 'selected' : ''); ?>>Admin</option>
                                                 </select>
                                             </form>
                                         </td>
                                     </tr>
-                                @empty
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <tr>
                                         <td colspan="4" class="text-center py-4">
                                             <div class="text-muted">
@@ -84,14 +85,14 @@
                                             </div>
                                         </td>
                                     </tr>
-                                @endforelse
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
 
                     <!-- Pagination -->
                     <div class="d-flex justify-content-center mt-4">
-                        {{-- $users->links() --}}
+                        
                     </div>
                 </div>
             </div>
@@ -110,4 +111,5 @@
     font-weight: bold;
 }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\xampp5\htdocs\stylesphere\resources\views/admin/users/index.blade.php ENDPATH**/ ?>
