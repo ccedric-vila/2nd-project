@@ -24,24 +24,29 @@ class OrderController extends Controller
     public function history()
     {
         $orders = auth()->user()->orders()
-                    ->with(['orderLines.product'])
+                    ->with(['orderLines.product.productImages']) // Eager load product images
                     ->where('status', '!=', Order::STATUS_CANCELLED)
                     ->latest()
                     ->paginate(10);
-
+    
         return view('orders.history', compact('orders'));
     }
 
     // Show order details
     public function show(Order $order)
-    {
-        if ($order->user_id !== auth()->id()) {
-            abort(403, 'Unauthorized action.');
-        }
-    
-        $order->load(['user', 'orderLines.product']);
-        return view('orders.show', compact('order'));
+{
+    if ($order->user_id !== auth()->id()) {
+        abort(403, 'Unauthorized action.');
     }
+
+    $order->load([
+        'user',
+        'orderLines.product.productImages', // Load product images
+        'orderLines.product.supplier'     // Load supplier if needed
+    ]);
+    
+    return view('orders.show', compact('order'));
+}
 
     // Accept order (Admin) - Creates sales records
     public function accept($id)

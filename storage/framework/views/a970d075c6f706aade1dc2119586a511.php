@@ -16,7 +16,12 @@
     <?php endif; ?>
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="fw-bold text-primary">Order History</h1>
+        <div>
+            <a href="<?php echo e(route('home')); ?>" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+            <h1 class="fw-bold text-primary d-inline-block">Order History</h1>
+        </div>
         <div class="bg-primary p-2 rounded">
             <span class="text-white fw-bold">Total Orders: <?php echo e($orders->total()); ?></span>
         </div>
@@ -42,6 +47,7 @@
                             <tr>
                                 <th class="ps-4">Order #</th>
                                 <th>Date</th>
+                                <th>Product Name</th>
                                 <th>Items</th>
                                 <th>Total</th>
                                 <th>Status</th>
@@ -51,7 +57,7 @@
                         <tbody>
                             <?php $__currentLoopData = $orders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $order): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr class="align-middle">
-                                <td class="ps-4 fw-bold">#<?php echo e(str_pad($order->id, 6, '0', STR_PAD_LEFT)); ?></td>
+                                <td class="ps-4 fw-bold">#<?php echo e($order->id); ?></td>
                                 <td>
                                     <div class="d-flex flex-column">
                                         <span class="fw-medium"><?php echo e($order->created_at->format('M d, Y')); ?></span>
@@ -59,21 +65,34 @@
                                     </div>
                                 </td>
                                 <td>
+                                    <?php if($order->orderLines->isNotEmpty()): ?>
+                                        <?php echo e($order->orderLines->first()->product->product_name ?? 'N/A'); ?>
+
+                                        <?php if($order->orderLines->count() > 1): ?>
+                                            + <?php echo e($order->orderLines->count() - 1); ?> more
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        N/A
+                                    <?php endif; ?>
+                                </td>
+                                <td>
                                     <div class="d-flex align-items-center">
                                         <span class="badge bg-secondary rounded-pill me-2"><?php echo e($order->orderLines->sum('quantity')); ?></span>
                                         <span>items</span>
                                     </div>
                                 </td>
-                                <td class="fw-bold text-success">$<?php echo e(number_format($order->total_amount, 2)); ?></td>
+                                <td class="fw-bold text-success">₱<?php echo e(number_format($order->total_amount, 2)); ?></td>
                                 <td>
                                     <span class="badge rounded-pill py-2 px-3 
                                         <?php if($order->status === 'pending'): ?> bg-warning text-dark
                                         <?php elseif($order->status === 'accepted'): ?> bg-success
+                                        <?php elseif($order->status === 'delivered'): ?> bg-info
                                         <?php else: ?> bg-danger
                                         <?php endif; ?>">
                                         <i class="fas 
                                             <?php if($order->status === 'pending'): ?> fa-clock
                                             <?php elseif($order->status === 'accepted'): ?> fa-check-circle
+                                            <?php elseif($order->status === 'delivered'): ?> fa-truck
                                             <?php else: ?> fa-times-circle
                                             <?php endif; ?> me-1"></i>
                                         <?php echo e(ucfirst($order->status)); ?>
@@ -85,43 +104,45 @@
                                         <a href="<?php echo e(route('orders.show', $order->id)); ?>" class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                             <i class="fas fa-eye me-1"></i> Details
                                         </a>
-                                        <?php if($order->status === 'accepted'): ?>
+                                        <?php if($order->status === 'delivered'): ?>
                                             <?php
                                                 $unreviewedProduct = $order->orderLines->first(function($line) use ($order) {
-                                                    return !$line->product->reviews()
+                                                    $product = $line->product;
+                                                    return $product && !$product->reviews()
                                                         ->where('user_id', auth()->id())
                                                         ->where('order_id', $order->id)
                                                         ->exists();
-                                                })->product ?? null;
+                                                });
                                                 
                                                 $reviewedProduct = $order->orderLines->first(function($line) use ($order) {
-                                                    return $line->product->reviews()
+                                                    $product = $line->product;
+                                                    return $product && $product->reviews()
                                                         ->where('user_id', auth()->id())
                                                         ->where('order_id', $order->id)
                                                         ->exists();
-                                                })->product ?? null;
+                                                });
                                             ?>
                                             
-                                            <?php if($reviewedProduct): ?>
+                                            <?php if($reviewedProduct && $reviewedProduct->product): ?>
                                                 <button class="btn btn-sm btn-warning rounded-pill px-3 edit-review-btn" 
                                                         data-bs-toggle="modal" 
                                                         data-bs-target="#reviewModal"
                                                         data-order-id="<?php echo e($order->id); ?>"
-                                                        data-product-id="<?php echo e($reviewedProduct->product_id); ?>"
-                                                        data-product-name="<?php echo e($reviewedProduct->name); ?>"
-                                                        data-product-image="<?php echo e($reviewedProduct->image_url); ?>"
-                                                        data-product-category="<?php echo e($reviewedProduct->category->name ?? 'N/A'); ?>">
+                                                        data-product-id="<?php echo e($reviewedProduct->product->product_id); ?>"
+                                                        data-product-name="<?php echo e($reviewedProduct->product->product_name); ?>"
+                                                        data-product-image="<?php echo e(optional($reviewedProduct->product->primaryImage)->image_path ?? asset('images/default-product.png')); ?>"
+                                                        data-review-rating="<?php echo e(optional($reviewedProduct->product->reviews()->where('user_id', auth()->id())->where('order_id', $order->id)->first())->rating); ?>"
+                                                        data-review-comment="<?php echo e(optional($reviewedProduct->product->reviews()->where('user_id', auth()->id())->where('order_id', $order->id)->first())->comment ?? ''); ?>">
                                                     <i class="fas fa-edit me-1"></i> Edit Review
                                                 </button>
-                                            <?php elseif($unreviewedProduct): ?>
+                                            <?php elseif($unreviewedProduct && $unreviewedProduct->product): ?>
                                                 <button class="btn btn-sm btn-success rounded-pill px-3 review-btn" 
                                                         data-bs-toggle="modal" 
                                                         data-bs-target="#reviewModal"
                                                         data-order-id="<?php echo e($order->id); ?>"
-                                                        data-product-id="<?php echo e($unreviewedProduct->product_id); ?>"
-                                                        data-product-name="<?php echo e($unreviewedProduct->name); ?>"
-                                                        data-product-image="<?php echo e($unreviewedProduct->image_url); ?>"
-                                                        data-product-category="<?php echo e($unreviewedProduct->category->name ?? 'N/A'); ?>">
+                                                        data-product-id="<?php echo e($unreviewedProduct->product->product_id); ?>"
+                                                        data-product-name="<?php echo e($unreviewedProduct->product->product_name); ?>"
+                                                        data-product-image="<?php echo e(optional($unreviewedProduct->product->primaryImage)->image_path ?? asset('images/default-product.png')); ?>">
                                                     <i class="fas fa-star me-1"></i> Review
                                                 </button>
                                             <?php else: ?>
@@ -355,6 +376,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const productName = button.getAttribute('data-product-name');
         const productImage = button.getAttribute('data-product-image');
         const productCategory = button.getAttribute('data-product-category');
+        const existingRating = button.getAttribute('data-review-rating');
+        const existingComment = button.getAttribute('data-review-comment');
         
         // Set form values
         document.getElementById('order_id').value = orderId;
@@ -368,39 +391,53 @@ document.addEventListener('DOMContentLoaded', function() {
         // Set product info immediately
         document.getElementById('product-info').innerHTML = `
             <div class="d-flex align-items-center justify-content-center mb-3">
-                <img src="${productImage}" alt="${productName}" class="product-image me-3">
+                <img src="${productImage || '<?php echo e(asset('images/default-product.png')); ?>'}" 
+                     alt="${productName || 'Product'}" 
+                     class="product-image me-3"
+                     onerror="this.src='<?php echo e(asset('images/default-product.png')); ?>'">
                 <div class="text-start">
-                    <h6 class="mb-1">${productName}</h6>
-                    <span class="text-muted small">${productCategory}</span>
+                    <h6 class="mb-1">${productName || 'Product'}</h6>
+                    ${productCategory ? `<span class="text-muted small">${productCategory}</span>` : ''}
                 </div>
             </div>
         `;
         
-        // Check if review exists
-        fetch(`/reviews/check?order_id=${orderId}&product_id=${productId}`, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
+        // If we have existing review data, use it immediately
+        if (existingRating) {
+            setRating(parseInt(existingRating));
+            if (existingComment) {
+                commentInput.value = existingComment;
             }
-        })
-        .then(response => response.json())
-        .then(data => {
+            document.getElementById('submit-text').textContent = 'Update Review';
+            document.getElementById('reviewModalLabel').textContent = 'Edit Your Review';
             showForm();
-            
-            if (data.review) {
-                setRating(data.review.rating);
-                commentInput.value = data.review.comment || '';
-                document.getElementById('submit-text').textContent = 'Update Review';
-                document.getElementById('reviewModalLabel').textContent = 'Edit Your Review';
-            } else {
-                document.getElementById('submit-text').textContent = 'Submit Review';
-                document.getElementById('reviewModalLabel').textContent = 'Rate Your Product';
-            }
-        })
-        .catch(error => {
-            console.error('Error checking review:', error);
-            showError('Failed to load review data. Please try again.');
-        });
+        } else {
+            // Check if review exists via API
+            fetch(`/reviews/check?order_id=${orderId}&product_id=${productId}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                showForm();
+                
+                if (data.review) {
+                    setRating(data.review.rating);
+                    commentInput.value = data.review.comment || '';
+                    document.getElementById('submit-text').textContent = 'Update Review';
+                    document.getElementById('reviewModalLabel').textContent = 'Edit Your Review';
+                } else {
+                    document.getElementById('submit-text').textContent = 'Submit Review';
+                    document.getElementById('reviewModalLabel').textContent = 'Rate Your Product';
+                }
+            })
+            .catch(error => {
+                console.error('Error checking review:', error);
+                showError('Failed to load review data. Please try again.');
+            });
+        }
     });
     
     // Star click event

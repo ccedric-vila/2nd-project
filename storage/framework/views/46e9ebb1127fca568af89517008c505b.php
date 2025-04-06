@@ -161,7 +161,7 @@
     <div id="app">
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">
-                <a class="navbar-brand" href="<?php echo e(url('/')); ?>">
+                <a class="navbar-brand" href="<?php echo e(auth()->check() ? (auth()->user()->role === 'admin' ? route('admin.dashboard') : route('home')) : url('/')); ?>">
                 <img src="<?php echo e(asset('storage/logo/logo.png')); ?>" alt="StyleSphere Logo">
                 StyleSphere
                 </a>
