@@ -18,8 +18,8 @@ class UsersTableSeeder extends Seeder
             [
                 'name' => 'Cedric Vila',
                 'email' => 'lordcedricvila@gmail.com',
-                'password' => Hash::make('Cedric123'),
-                'role' => 'admin', // Changed from User::ROLE_ADMIN to string
+                'password' => Hash::make('Cedric123!'),
+                'role' => 'admin',
                 'age' => 20,
                 'sex' => 'male',
                 'contact_number' => '09937994369',
@@ -29,8 +29,8 @@ class UsersTableSeeder extends Seeder
             [
                 'name' => 'Dwayne Casay',
                 'email' => 'dwaynecasay999@gmail.com',
-                'password' => Hash::make('Dwayne123'),
-                'role' => 'admin', // Changed from User::ROLE_ADMIN to string
+                'password' => Hash::make('Dwayne123!'),
+                'role' => 'admin',
                 'age' => 20,
                 'sex' => 'male',
                 'contact_number' => '09123456789',
@@ -46,12 +46,12 @@ class UsersTableSeeder extends Seeder
             );
         }
 
-        // Create 3 randomized user accounts
+        // Create specific user accounts with Password123!
         $users = [
             [
                 'name' => 'Juan Dela Cruz',
                 'email' => 'juan.delacruz@example.com',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('Password123!'),
                 'role' => 'user',
                 'age' => 28,
                 'sex' => 'male',
@@ -62,7 +62,7 @@ class UsersTableSeeder extends Seeder
             [
                 'name' => 'Maria Santos',
                 'email' => 'maria.santos@example.com',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('Password123!'),
                 'role' => 'user',
                 'age' => 25,
                 'sex' => 'female',
@@ -73,7 +73,7 @@ class UsersTableSeeder extends Seeder
             [
                 'name' => 'Alex Reyes',
                 'email' => 'alex.reyes@example.com',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('Password123!'),
                 'role' => 'user',
                 'age' => 30,
                 'sex' => 'other',
@@ -93,7 +93,7 @@ class UsersTableSeeder extends Seeder
         // Create additional random users (optional)
         User::factory()->count(15)->create([
             'role' => 'user',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('Password123!'),
             'status' => 'active',
         ]);
     }

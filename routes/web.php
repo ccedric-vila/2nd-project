@@ -34,13 +34,16 @@ Route::get('/send-test-email', function () {
 });
 Route::get('/', [LandingController::class, 'index'])->name('welcome');
 
+
 // Authentication Routes
 Auth::routes(['register' => false, 'login' => false]); // Disable default auth routes
 
 // Custom Register Routes
 Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('register', [RegisterController::class, 'register']);
-
+// New email verification routes (add these)
+Route::get('/verify-email/{token}', [VerificationController::class, 'verify'])->name('verification.verify');
+Route::get('/email/verify', [VerificationController::class, 'show'])->name('verification.notice');
 // Custom Login Routes
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login']);
@@ -53,14 +56,35 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Dashboard
     Route::get('/', [AdminController::class, 'index'])->name('dashboard');
 
-    
+    //Produc Crud Routes
+    Route::resource('products', ProductController::class)
+        ->except(['show']) // If you don't want the show route
+        ->names([
+            'index' => 'product.index',
+            'create' => 'product.create',
+            'store' => 'product.store',
+            'edit' => 'product.edit',
+            'update' => 'product.update',
+            'destroy' => 'product.destroy'
+        ]);
 
     // Product Routes (Fixed: Now includes create & store)
     Route::get('products', [ProductController::class, 'index'])->name('product.index'); // Note: 
     Route::get('products/import', [ProductController::class, 'showImportForm'])->name('products.import');
     Route::post('products/import', [ProductController::class, 'import'])->name('products.import.submit');
 
-    
+    //Supplier CRUD
+
+    Route::resource('suppliers', SupplierController::class)
+        ->names([
+            'index' => 'supplier.index',
+            'create' => 'supplier.create',
+            'store' => 'supplier.store',
+            'edit' => 'supplier.edit',
+            'update' => 'supplier.update',
+            'destroy' => 'supplier.destroy'
+        ]);
+
 
     // Supplier Routes
     Route::resource('supplier', SupplierController::class);

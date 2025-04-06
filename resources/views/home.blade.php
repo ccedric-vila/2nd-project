@@ -19,7 +19,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-search"></i>
                         </button>
-                        @if(request('search') || request('price_range') || request('size') || request('category') || request('types'))
+                        @if(request('search') || request('price_range') || request('size') || request('category') || request('types') || request('brand'))
                             <a href="{{ route('home') }}" class="btn btn-outline-secondary">
                                 Clear All
                             </a>
@@ -28,6 +28,7 @@
                 </div>
                 <div class="col-md-4">
                     <div class="input-group">
+                    <label class="input-group-text" for="size">Price:</label>
                         <select name="price_range" class="form-select" onchange="this.form.submit()">
                             <option value="">All Prices</option>
                             <option value="0-1000" {{ request('price_range') == '0-1000' ? 'selected' : '' }}>$0 - $1000</option>
@@ -53,7 +54,7 @@
             <!-- NEW FILTER ROW ADDED HERE -->
             <div class="row g-3 mt-2">
                 <!-- Size Filter -->
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="input-group">
                         <label class="input-group-text" for="size">Size</label>
                         <select name="size" id="size" class="form-select" onchange="this.form.submit()">
@@ -74,7 +75,7 @@
                 </div>
                 
                 <!-- Category Filter -->
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="input-group">
                         <label class="input-group-text" for="category">Category</label>
                         <select name="category" id="category" class="form-select" onchange="this.form.submit()">
@@ -92,7 +93,7 @@
                 </div>
                 
                 <!-- Types Filter -->
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="input-group">
                         <label class="input-group-text" for="types">Types</label>
                         <select name="types" id="types" class="form-select" onchange="this.form.submit()">
@@ -114,8 +115,27 @@
                         @endif
                     </div>
                 </div>
+                
+                <!-- Brand Filter - Corrected Version -->
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <label class="input-group-text" for="brand">Brand</label>
+                        <select name="brand" id="brand" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Brands</option>
+                            @foreach($suppliers as $supplier)
+                                <option value="{{ $supplier->supplier_id }}" {{ request('brand') == $supplier->supplier_id ? 'selected' : '' }}>
+                                    {{ $supplier->brand_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @if(request('brand'))
+                            <a href="{{ route('home', array_merge(request()->except('brand'), ['page' => null])) }}" class="btn btn-outline-secondary">
+                                Clear
+                            </a>
+                        @endif
+                    </div>
+                </div>
             </div>
-            <!-- END OF NEW FILTER ROW -->
         </form>
 
         <!-- Price Sorting Options - Single Toggle Button Version -->
@@ -124,7 +144,7 @@
             @php
                 $currentSort = request('sort');
                 $nextSort = ($currentSort == 'price_asc') ? 'price_desc' : 'price_asc';
-                $buttonText = ($currentSort == 'price_asc');
+                $buttonText = ($currentSort == 'price_asc') ? 'Low to High' : 'High to Low';
                 $buttonIcon = ($currentSort == 'price_asc') ? 'fa-arrow-down' : 'fa-arrow-up';
                 $buttonClass = ($currentSort == 'price_asc' || $currentSort == 'price_desc') ? 'btn-primary' : 'btn-outline-primary';
             @endphp
@@ -140,7 +160,7 @@
         @endif
     </div>
 
-    <!-- Rest of your existing product display code remains exactly the same -->
+    <!-- Product Display -->
     <div class="row">
         @if(request('search') && $products->isEmpty())
             <div class="col-12 text-center py-5">
@@ -183,7 +203,6 @@
                             <h5 class="card-title">{{ $product->product_name }}</h5>
                             <p class="card-text"><strong>Brand:</strong> {{ $product->supplier->brand_name ?? 'No Brand' }}</p>
                             
-                            <!-- Updated Category, Type, and Size Information to match model -->
                             <div class="mb-2">
                                 @if($product->category)
                                     <span class="badge bg-primary me-1">{{ $product->category }}</span>

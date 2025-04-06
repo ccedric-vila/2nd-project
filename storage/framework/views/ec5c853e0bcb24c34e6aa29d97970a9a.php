@@ -17,7 +17,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-search"></i>
                         </button>
-                        <?php if(request('search') || request('price_range') || request('size') || request('category') || request('types')): ?>
+                        <?php if(request('search') || request('price_range') || request('size') || request('category') || request('types') || request('brand')): ?>
                             <a href="<?php echo e(route('home')); ?>" class="btn btn-outline-secondary">
                                 Clear All
                             </a>
@@ -26,6 +26,7 @@
                 </div>
                 <div class="col-md-4">
                     <div class="input-group">
+                    <label class="input-group-text" for="size">Price:</label>
                         <select name="price_range" class="form-select" onchange="this.form.submit()">
                             <option value="">All Prices</option>
                             <option value="0-1000" <?php echo e(request('price_range') == '0-1000' ? 'selected' : ''); ?>>$0 - $1000</option>
@@ -51,7 +52,7 @@
             <!-- NEW FILTER ROW ADDED HERE -->
             <div class="row g-3 mt-2">
                 <!-- Size Filter -->
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="input-group">
                         <label class="input-group-text" for="size">Size</label>
                         <select name="size" id="size" class="form-select" onchange="this.form.submit()">
@@ -72,7 +73,7 @@
                 </div>
                 
                 <!-- Category Filter -->
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="input-group">
                         <label class="input-group-text" for="category">Category</label>
                         <select name="category" id="category" class="form-select" onchange="this.form.submit()">
@@ -90,7 +91,7 @@
                 </div>
                 
                 <!-- Types Filter -->
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="input-group">
                         <label class="input-group-text" for="types">Types</label>
                         <select name="types" id="types" class="form-select" onchange="this.form.submit()">
@@ -112,8 +113,28 @@
                         <?php endif; ?>
                     </div>
                 </div>
+                
+                <!-- Brand Filter - Corrected Version -->
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <label class="input-group-text" for="brand">Brand</label>
+                        <select name="brand" id="brand" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Brands</option>
+                            <?php $__currentLoopData = $suppliers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $supplier): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($supplier->supplier_id); ?>" <?php echo e(request('brand') == $supplier->supplier_id ? 'selected' : ''); ?>>
+                                    <?php echo e($supplier->brand_name); ?>
+
+                                </option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </select>
+                        <?php if(request('brand')): ?>
+                            <a href="<?php echo e(route('home', array_merge(request()->except('brand'), ['page' => null]))); ?>" class="btn btn-outline-secondary">
+                                Clear
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
-            <!-- END OF NEW FILTER ROW -->
         </form>
 
         <!-- Price Sorting Options - Single Toggle Button Version -->
@@ -122,7 +143,7 @@
             <?php
                 $currentSort = request('sort');
                 $nextSort = ($currentSort == 'price_asc') ? 'price_desc' : 'price_asc';
-                $buttonText = ($currentSort == 'price_asc');
+                $buttonText = ($currentSort == 'price_asc') ? 'Low to High' : 'High to Low';
                 $buttonIcon = ($currentSort == 'price_asc') ? 'fa-arrow-down' : 'fa-arrow-up';
                 $buttonClass = ($currentSort == 'price_asc' || $currentSort == 'price_desc') ? 'btn-primary' : 'btn-outline-primary';
             ?>
@@ -139,7 +160,7 @@
         <?php endif; ?>
     </div>
 
-    <!-- Rest of your existing product display code remains exactly the same -->
+    <!-- Product Display -->
     <div class="row">
         <?php if(request('search') && $products->isEmpty()): ?>
             <div class="col-12 text-center py-5">
@@ -182,7 +203,6 @@
                             <h5 class="card-title"><?php echo e($product->product_name); ?></h5>
                             <p class="card-text"><strong>Brand:</strong> <?php echo e($product->supplier->brand_name ?? 'No Brand'); ?></p>
                             
-                            <!-- Updated Category, Type, and Size Information to match model -->
                             <div class="mb-2">
                                 <?php if($product->category): ?>
                                     <span class="badge bg-primary me-1"><?php echo e($product->category); ?></span>
