@@ -8,11 +8,11 @@ class LandingController extends Controller
 {
     public function index()
     {
-        $product = Product::with(['supplier', 'images', 'reviews'])
+        $products = Product::with(['supplier', 'images', 'reviews'])
             ->orderBy('created_at', 'desc')
-            ->take(8) // Show 8 featured products
+            ->take(8)
             ->get();
             
-        return view('landing', compact('product'));
+        return view('landing', compact('products'));
     }
 }

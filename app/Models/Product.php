@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Product extends Model
 {
@@ -32,43 +35,72 @@ class Product extends Model
         'stock' => 'integer',
     ];
 
-    public function supplier()
+    /**
+     * Relationship with Supplier
+     */
+   
+     public function supplier(): BelongsTo
+     {
+         return $this->belongsTo(Supplier::class, 'supplier_id', 'supplier_id');
+     }
+ 
+     // Main images relationship (used in controller)
+     public function productImages(): HasMany
+     {
+         return $this->hasMany(ProductImage::class, 'product_id', 'product_id');
+     }
+ 
+     // Alias if you want to keep both
+     public function images(): HasMany
+     {
+         return $this->productImages();
+     }
+
+    /**
+     * Relationship with Primary Image
+     */
+    public function primaryImage(): HasOne
     {
-        return $this->belongsTo(Supplier::class, 'supplier_id', 'supplier_id');
+        return $this->hasOne(ProductImage::class, 'product_id', 'product_id')
+                    ->where('is_primary', true);
     }
 
-    public function productImages()
-    {
-        return $this->hasMany(ProductImage::class, 'product_id');
-    }
-
-    public function primaryImage()
-    {
-        return $this->hasOne(ProductImage::class, 'product_id')->where('is_primary', true);
-    }
-
-    public function reviews()
+    /**
+     * Relationship with Reviews
+     */
+    public function reviews(): HasMany
     {
         return $this->hasMany(Review::class, 'product_id', 'product_id');
     }
 
-    public function userReview($userId)
+    /**
+     * Get a user's specific review
+     */
+    public function userReview(int $userId): ?Review
     {
         return $this->reviews()->where('user_id', $userId)->first();
     }
 
-    // New methods for review functionality
-    public function getAverageRatingAttribute()
+    /**
+     * Calculate average rating
+     */
+    public function getAverageRatingAttribute(): float
     {
-        return $this->reviews()->avg('rating') ?? 0;
+        return (float) $this->reviews()->avg('rating') ?? 0.0;
     }
 
-    public function getRatingCountAttribute()
+    /**
+     * Count total reviews
+     */
+    public function getRatingCountAttribute(): int
     {
         return $this->reviews()->count();
     }
 
-    public function getStarRatingAttribute()
+    /**
+     * Generate star rating display
+     */
+    public function getStarRatingAttribute(): string
     {
         $avgRating = $this->average_rating;
         $fullStars = floor($avgRating);

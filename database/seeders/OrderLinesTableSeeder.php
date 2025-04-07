@@ -6,30 +6,42 @@ use App\Models\Order;
 use App\Models\OrderLine;
 use App\Models\Product;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class OrderLinesTableSeeder extends Seeder
 {
     public function run()
     {
-        // Disable foreign key checks
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        OrderLine::truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        // Ensure we have orders and products
+        if (Order::count() === 0) {
+            $this->call(OrdersTableSeeder::class);
+        }
+
+        if (Product::count() === 0) {
+            $this->call(ProductTableSeeder::class);
+        }
 
         $orders = Order::all();
-        $products = Product::limit(30)->get();
+        $products = Product::all();
 
-        // Create 2-4 order lines for each order
         foreach ($orders as $order) {
-            $itemsCount = rand(2, 4);
-            $total = 0;
-            
+            // Each order has 1-5 products
+            $itemsCount = rand(1, 5);
+            $totalAmount = 0;
+            $selectedProducts = [];
+
             for ($i = 0; $i < $itemsCount; $i++) {
                 $product = $products->random();
+                
+                // Ensure unique products per order
+                while (in_array($product->product_id, $selectedProducts)) {
+                    $product = $products->random();
+                }
+                
+                $selectedProducts[] = $product->product_id;
+                
                 $quantity = rand(1, 3);
                 $price = $product->sell_price;
-                
+
                 OrderLine::create([
                     'order_id' => $order->id,
                     'product_id' => $product->product_id,
@@ -38,12 +50,13 @@ class OrderLinesTableSeeder extends Seeder
                     'created_at' => $order->created_at,
                     'updated_at' => $order->created_at,
                 ]);
-                
-                $total += $price * $quantity;
+
+                $totalAmount += $quantity * $price;
             }
-            
+
             // Update order total amount
-            $order->update(['total_amount' => $total]);
+            $order->total_amount = $totalAmount;
+            $order->save();
         }
     }
 }

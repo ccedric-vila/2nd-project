@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\Supplier; // Add this line
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
