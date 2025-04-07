@@ -75,19 +75,23 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     //Supplier CRUD
 
+    // First resource (with 'suppliers' URL)
     Route::resource('suppliers', SupplierController::class)
         ->names([
-            'index' => 'supplier.index',
-            'create' => 'supplier.create',
-            'store' => 'supplier.store',
-            'edit' => 'supplier.edit',
-            'update' => 'supplier.update',
-            'destroy' => 'supplier.destroy'
-        ]);
+            'index' => 'admin.supplier.index',
+            'create' => 'admin.supplier.create',
+            'store' => 'admin.supplier.store',
+            'edit' => 'admin.supplier.edit',
+            'update' => 'admin.supplier.update',
+            'destroy' => 'admin.supplier.destroy'
+        ])
+        ->except(['show']); // Exclude 'show'
 
+    // Second resource (with 'supplier' URL)
+    Route::resource('supplier', SupplierController::class)
+        ->except(['show']); // Also exclude 'show'
 
-    // Supplier Routes
-    Route::resource('supplier', SupplierController::class);
+    // Import routes (unchanged)
     Route::get('suppliers/import', [SupplierController::class, 'showImportForm'])->name('suppliers.import'); 
     Route::post('suppliers/import', [SupplierController::class, 'import'])->name('suppliers.import.process');
     

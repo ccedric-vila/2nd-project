@@ -64,7 +64,7 @@
                                             </div>
                                         </div>
                                         <div class="text-end">
-                                            <h4 class="text-primary mb-0">$<span id="unit-price-display">{{ number_format($product->sell_price, 2) }}</span></h4>
+                                            <h4 class="text-primary mb-0">₱<span id="unit-price-display">{{ number_format($product->sell_price, 2) }}</span></h4>
                                             <small class="text-success">
                                                 <i class="fas fa-check-circle"></i> In Stock: <span class="available-stock">{{ $product->stock }}</span>
                                             </small>
@@ -140,7 +140,7 @@
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between mb-2">
                                             <span>Price per item:</span>
-                                            <span>$<span id="display-price">{{ number_format($product->sell_price, 2) }}</span></span>
+                                            <span>₱<span id="display-price">{{ number_format($product->sell_price, 2) }}</span></span>
                                         </div>
                                         <div class="d-flex justify-content-between mb-2">
                                             <span>Quantity:</span>
@@ -149,7 +149,7 @@
                                         <hr>
                                         <div class="d-flex justify-content-between fw-bold">
                                             <span>Total:</span>
-                                            <span>$<span id="total-price">{{ number_format($product->sell_price, 2) }}</span></span>
+                                            <span>₱<span id="total-price">{{ number_format($product->sell_price, 2) }}</span></span>
                                         </div>
                                         <button type="submit" class="btn btn-primary w-100 mt-3 py-2" id="submit-btn">
                                             <i class="fas fa-lock me-2"></i> Complete Secure Payment

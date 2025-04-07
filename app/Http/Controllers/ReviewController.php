@@ -20,7 +20,7 @@ class ReviewController extends Controller
     {
         try {
             $reviews = Review::with(['user' => function($query) {
-                    $query->select('id', 'name', 'image');
+                    $query->select('id', 'name');
                 }])
                 ->where('product_id', $product->product_id)
                 ->orderBy('created_at', 'desc')
@@ -49,11 +49,7 @@ class ReviewController extends Controller
     {
         try {
             $reviews = Review::with(['product' => function($query) {
-                    $query->select('product_id', 'product_name', 'image_path')
-                        ->with(['primaryImage' => function($q) {
-                            $q->select('product_id', 'image_path')
-                              ->where('is_primary', true);
-                        }]);
+                    $query->select('product_id', 'product_name');
                 }])
                 ->where('user_id', auth()->id())
                 ->orderBy('created_at', 'desc')
@@ -146,7 +142,7 @@ class ReviewController extends Controller
                 'success' => true,
                 'review' => $review->load([
                     'user' => function($query) {
-                        $query->select('id', 'name', 'image');
+                        $query->select('id', 'name');
                     },
                     'product' => function($query) {
                         $query->select('product_id', 'product_name');
@@ -211,11 +207,7 @@ class ReviewController extends Controller
             ]);
 
             $review = Review::with(['product' => function($query) {
-                    $query->select('product_id', 'product_name', 'image_path')
-                        ->with(['primaryImage' => function($q) {
-                            $q->select('product_id', 'image_path')
-                              ->where('is_primary', true);
-                        }]);
+                    $query->select('product_id', 'product_name');
                 }])
                 ->where([
                     'user_id' => auth()->id(),

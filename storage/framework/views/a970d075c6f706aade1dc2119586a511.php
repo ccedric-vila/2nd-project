@@ -130,7 +130,6 @@
                                                         data-order-id="<?php echo e($order->id); ?>"
                                                         data-product-id="<?php echo e($reviewedProduct->product->product_id); ?>"
                                                         data-product-name="<?php echo e($reviewedProduct->product->product_name); ?>"
-                                                        data-product-image="<?php echo e(optional($reviewedProduct->product->primaryImage)->image_path ?? asset('images/default-product.png')); ?>"
                                                         data-review-rating="<?php echo e(optional($reviewedProduct->product->reviews()->where('user_id', auth()->id())->where('order_id', $order->id)->first())->rating); ?>"
                                                         data-review-comment="<?php echo e(optional($reviewedProduct->product->reviews()->where('user_id', auth()->id())->where('order_id', $order->id)->first())->comment ?? ''); ?>">
                                                     <i class="fas fa-edit me-1"></i> Edit Review
@@ -141,8 +140,7 @@
                                                         data-bs-target="#reviewModal"
                                                         data-order-id="<?php echo e($order->id); ?>"
                                                         data-product-id="<?php echo e($unreviewedProduct->product->product_id); ?>"
-                                                        data-product-name="<?php echo e($unreviewedProduct->product->product_name); ?>"
-                                                        data-product-image="<?php echo e(optional($unreviewedProduct->product->primaryImage)->image_path ?? asset('images/default-product.png')); ?>">
+                                                        data-product-name="<?php echo e($unreviewedProduct->product->product_name); ?>">
                                                     <i class="fas fa-star me-1"></i> Review
                                                 </button>
                                             <?php else: ?>
@@ -279,12 +277,6 @@
         20%, 60% { transform: translateX(-5px); }
         40%, 80% { transform: translateX(5px); }
     }
-    .product-image {
-        width: 80px;
-        height: 80px;
-        object-fit: cover;
-        border-radius: 8px;
-    }
 </style>
 
 <script>
@@ -374,8 +366,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const orderId = button.getAttribute('data-order-id');
         const productId = button.getAttribute('data-product-id');
         const productName = button.getAttribute('data-product-name');
-        const productImage = button.getAttribute('data-product-image');
-        const productCategory = button.getAttribute('data-product-category');
         const existingRating = button.getAttribute('data-review-rating');
         const existingComment = button.getAttribute('data-review-comment');
         
@@ -390,15 +380,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Set product info immediately
         document.getElementById('product-info').innerHTML = `
-            <div class="d-flex align-items-center justify-content-center mb-3">
-                <img src="${productImage || '<?php echo e(asset('images/default-product.png')); ?>'}" 
-                     alt="${productName || 'Product'}" 
-                     class="product-image me-3"
-                     onerror="this.src='<?php echo e(asset('images/default-product.png')); ?>'">
-                <div class="text-start">
-                    <h6 class="mb-1">${productName || 'Product'}</h6>
-                    ${productCategory ? `<span class="text-muted small">${productCategory}</span>` : ''}
-                </div>
+            <div class="text-start">
+                <h6 class="mb-1">${productName || 'Product'}</h6>
             </div>
         `;
         

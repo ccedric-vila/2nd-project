@@ -63,19 +63,19 @@
                                             </td>
                                             <td class="border-0 text-center">{{ $line->size }}</td>
                                             <td class="border-0 text-center">{{ $line->quantity }}</td>
-                                            <td class="border-0 text-end">${{ number_format($line->sell_price, 2) }}</td>
-                                            <td class="border-0 text-end">${{ number_format($line->sell_price * $line->quantity, 2) }}</td>
+                                            <td class="border-0 text-end">₱{{ number_format($line->sell_price, 2) }}</td>
+                                            <td class="border-0 text-end">₱{{ number_format($line->sell_price * $line->quantity, 2) }}</td>
                                         </tr>
                                         @endforeach
                                     </tbody>
                                     <tfoot class="table-light">
                                         <tr>
                                             <td colspan="4" class="text-end border-0"><strong>Subtotal:</strong></td>
-                                            <td class="text-end border-0">${{ number_format($order->total_amount, 2) }}</td>
+                                            <td class="text-end border-0">₱{{ number_format($order->total_amount, 2) }}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="4" class="text-end border-0"><strong>Total:</strong></td>
-                                            <td class="text-end border-0"><strong>${{ number_format($order->total_amount, 2) }}</strong></td>
+                                            <td class="text-end border-0"><strong>₱{{ number_format($order->total_amount, 2) }}</strong></td>
                                         </tr>
                                     </tfoot>
                                 </table>
