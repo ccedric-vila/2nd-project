@@ -37,7 +37,7 @@ class OrdersTableSeeder extends Seeder
             // Randomly select year (2024 or 2025)
             $year = rand(0, 1) ? 2024 : 2025;
             // Random month between January (1) and July (7)
-            $month = rand(1, 7);
+            $month = rand(1, 11);
             // Random day (1-28 to avoid month length issues)
             $day = rand(1, 28);
             // Random hour
@@ -52,18 +52,8 @@ class OrdersTableSeeder extends Seeder
                 'total_amount' => 0, // Will be updated by OrderLines seeder
                 'status' => $status,
                 'created_at' => $createdAt,
-                'updated_at' => $this->getUpdatedAt($status, $createdAt),
+                'updated_at' => $createdAt,
             ]);
         }
-    }
-
-    protected function getUpdatedAt($status, $createdAt)
-    {
-        return match($status) {
-            'accepted' => $createdAt->copy()->addHours(rand(1, 12)),
-            'delivered' => $createdAt->copy()->addDays(rand(1, 5)),
-            'cancelled' => $createdAt->copy()->addHours(rand(1, 24)),
-            default => $createdAt,
-        };
     }
 }

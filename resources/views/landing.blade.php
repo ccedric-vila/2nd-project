@@ -1,48 +1,63 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="bg-white">
+<div class="bg-gradient-to-b from-gray-50 to-white">
     <div class="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
         <!-- Hero Section -->
-        <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Welcome to StyleSphere</h2>
-            <p class="mx-auto mt-4 max-w-2xl text-xl text-gray-500">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">Welcome to StyleSphere</h2>
+            <p class="mx-auto mt-6 max-w-2xl text-xl text-gray-600">
                 Discover our premium collection. Sign in to start shopping.
             </p>
+            <div class="mt-8">
+                <a href="{{ route('login') }}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition duration-150">
+                    Sign In to Explore
+                </a>
+            </div>
         </div>
 
         <!-- Product Grid -->
-        <div class="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
+        <div class="grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-10">
             @foreach($products as $product)
-            <div class="group">
+            <div class="group relative bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 p-4">
                 <!-- Product Image -->
-                <div class="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200 xl:aspect-h-8 xl:aspect-w-7">
+                <div class="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-xl bg-gray-200 xl:aspect-h-8 xl:aspect-w-7">
                     @if($product->images->count() > 0)
                     <img src="{{ asset('storage/' . $product->images[0]->image_path) }}" 
                          alt="{{ $product->product_name }}" 
-                         class="h-full w-full object-cover object-center group-hover:opacity-75">
+                         class="h-full w-full object-cover object-center group-hover:opacity-85 transition-opacity duration-300">
                     @else
-                    <div class="h-full w-full flex items-center justify-center">
-                        <i class="fas fa-image fa-3x text-gray-400"></i>
+                    <div class="h-full w-full flex items-center justify-center py-12">
+                        <i class="fas fa-image fa-4x text-gray-400"></i>
                     </div>
                     @endif
                 </div>
 
+                <!-- Hover Quick View Overlay -->
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    <div class="bg-white p-2 rounded-full shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </div>
+                </div>
+
                 <!-- Product Info -->
-                <div class="mt-4">
-                    <div class="flex justify-between">
+                <div class="mt-6">
+                    <div class="flex justify-between items-start">
                         <div>
-                            <h3 class="text-sm text-gray-700">
+                            <h3 class="text-base font-medium text-gray-800 hover:text-indigo-600 transition">
                                 {{ $product->product_name }}
                             </h3>
                             <p class="mt-1 text-sm text-gray-500">{{ $product->supplier->brand_name ?? 'No Brand' }}</p>
                         </div>
-                        <p class="text-sm font-medium text-gray-900">${{ number_format($product->sell_price, 2) }}</p>
+                        <p class="text-lg font-semibold text-gray-900">${{ number_format($product->sell_price, 2) }}</p>
                     </div>
 
                     <!-- Reviews -->
                     @if($product->reviews->count() > 0)
-                    <div class="mt-2">
+                    <div class="mt-3 pb-4 border-b border-gray-100">
                         <div class="flex items-center">
                             @php $avgRating = $product->average_rating; @endphp
                             @for($i = 1; $i <= 5; $i++)
@@ -60,15 +75,15 @@
                                     </svg>
                                 @endif
                             @endfor
-                            <span class="ml-1 text-xs text-gray-500">({{ $product->reviews->count() }})</span>
+                            <span class="ml-2 text-sm text-gray-500">({{ $product->reviews->count() }})</span>
                         </div>
                         
                         <!-- Top Review Preview -->
                         @if($product->reviews->count() > 0)
                         @php $latestReview = $product->reviews->sortByDesc('created_at')->first(); @endphp
-                        <div class="mt-1 text-xs text-gray-500">
+                        <div class="mt-2 text-sm text-gray-600 italic bg-gray-50 p-2 rounded-md">
                             <p class="truncate">"{{ $latestReview->comment }}"</p>
-                            <p>- {{ $latestReview->user->name }}</p>
+                            <p class="text-xs text-gray-500 mt-1">- {{ $latestReview->user->name }}</p>
                         </div>
                         @endif
                     </div>
@@ -76,24 +91,24 @@
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="mt-4 grid grid-cols-2 gap-2">
+                <div class="mt-4 grid grid-cols-2 gap-3">
                     <form action="{{ route('login') }}" method="GET">
                         <input type="hidden" name="redirect_to" value="{{ url()->current() }}">
-                        <button type="submit" class="flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <button type="submit" class="flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-150 shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
-                            Add
+                            Add to Cart
                         </button>
                     </form>
                     <form action="{{ route('login') }}" method="GET">
                         <input type="hidden" name="redirect_to" value="{{ url()->current() }}">
                         <input type="hidden" name="buy_now" value="{{ $product->id }}">
-                        <button type="submit" class="flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <button type="submit" class="flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 shadow-sm transition-colors duration-150">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
-                            Buy
+                            Buy Now
                         </button>
                     </form>
                 </div>

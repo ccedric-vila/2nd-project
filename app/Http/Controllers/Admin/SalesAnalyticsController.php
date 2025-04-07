@@ -12,7 +12,17 @@ class SalesAnalyticsController extends Controller
 {
     public function index()
     {
-        return view('admin.sales.analytics');
+        // Get distinct years and months for the filter dropdowns
+        $years = Sale::selectRaw('YEAR(sale_date) as year')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year');
+            
+        $months = collect(range(1, 12))->mapWithKeys(function ($month) {
+            return [$month => Carbon::create()->month($month)->format('F')];
+        });
+
+        return view('admin.sales.analytics', compact('years', 'months'));
     }
 
     public function getChartData(Request $request)
@@ -20,16 +30,33 @@ class SalesAnalyticsController extends Controller
         $request->validate([
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-            'group_by' => 'in:daily,monthly,yearly'
+            'group_by' => 'in:daily,monthly,yearly',
+            'year' => 'nullable|integer|min:2000|max:2100',
+            'month' => 'nullable|integer|min:1|max:12'
         ]);
 
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : now()->subMonth();
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : now();
-        $groupBy = $request->group_by ?? 'monthly';
+        // Base query
+        $salesQuery = Sale::query();
+
+        // Apply year/month filter if provided
+        if ($request->filled('year')) {
+            $salesQuery->whereYear('sale_date', $request->year);
+            
+            if ($request->filled('month')) {
+                $salesQuery->whereMonth('sale_date', $request->month);
+                $groupBy = 'daily'; // Default to daily when month is selected
+            } else {
+                $groupBy = $request->group_by ?? 'monthly';
+            }
+        } else {
+            // Default date range if no year/month filter
+            $startDate = $request->start_date ? Carbon::parse($request->start_date) : now()->subMonth();
+            $endDate = $request->end_date ? Carbon::parse($request->end_date) : now();
+            $salesQuery->whereBetween('sale_date', [$startDate, $endDate]);
+            $groupBy = $request->group_by ?? 'monthly';
+        }
 
         // Sales Data
-        $salesQuery = Sale::whereBetween('sale_date', [$startDate, $endDate]);
-
         switch ($groupBy) {
             case 'daily':
                 $salesData = $salesQuery->selectRaw('DATE(sale_date) as date, SUM(total_price) as total')
@@ -56,19 +83,35 @@ class SalesAnalyticsController extends Controller
                 break;
         }
 
-        // Product Sales Data
-        $productSales = Sale::with('product')
-            ->selectRaw('product_id, SUM(total_price) as total')
-            ->whereBetween('sale_date', [$startDate, $endDate])
+        // Product Sales Data with proper product name
+        $productSales = Sale::with(['product' => function($query) {
+                $query->select('product_id', 'product_name as name');
+            }])
+            ->selectRaw('product_id, SUM(quantity) as total_quantity, SUM(total_price) as total')
+            ->whereBetween('sale_date', [
+                $request->filled('year') ? Carbon::create($request->year, $request->month ?? 1, 1) : $startDate,
+                $request->filled('year') ? 
+                    ($request->filled('month') ? 
+                        Carbon::create($request->year, $request->month, 1)->endOfMonth() : 
+                        Carbon::create($request->year, 12, 31)) : 
+                    $endDate
+            ])
             ->groupBy('product_id')
             ->orderByDesc('total')
+            ->limit(10) // Limit to top 10 products
             ->get();
 
         // Generate colors for products
-        $colors = [];
-        foreach ($productSales as $item) {
-            $colors[] = $this->generateColor($item->product_id);
-        }
+        $colors = $productSales->map(function($item) {
+            return $this->generateColor($item->product_id);
+        });
+
+        // Prepare date range display
+        $dateRange = $request->filled('year') 
+            ? ($request->filled('month') 
+                ? Carbon::create($request->year, $request->month)->format('F Y')
+                : $request->year)
+            : ($startDate->format('M d, Y') . ' - ' . $endDate->format('M d, Y'));
 
         return response()->json([
             'sales_chart' => [
@@ -79,11 +122,13 @@ class SalesAnalyticsController extends Controller
                 'labels' => $productSales->pluck('product.name'),
                 'data' => $productSales->pluck('total'),
                 'colors' => $colors,
+                'quantities' => $productSales->pluck('total_quantity'),
             ],
             'summary' => [
                 'total_sales' => $salesData->sum('total'),
                 'total_products' => $productSales->count(),
-                'date_range' => $startDate->format('M d, Y') . ' - ' . $endDate->format('M d, Y')
+                'date_range' => $dateRange,
+                'average_sale' => $salesData->avg('total')
             ]
         ]);
     }

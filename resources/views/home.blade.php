@@ -31,16 +31,16 @@
                     <label class="input-group-text" for="size">Price:</label>
                         <select name="price_range" class="form-select" onchange="this.form.submit()">
                             <option value="">All Prices</option>
-                            <option value="0-1000" {{ request('price_range') == '0-1000' ? 'selected' : '' }}>$0 - $1000</option>
-                            <option value="1001-2000" {{ request('price_range') == '1001-2000' ? 'selected' : '' }}>$1001 - $2000</option>
-                            <option value="2001-3000" {{ request('price_range') == '2001-3000' ? 'selected' : '' }}>$2001 - $3000</option>
-                            <option value="3001-4000" {{ request('price_range') == '3001-4000' ? 'selected' : '' }}>$3001 - $4000</option>
-                            <option value="4001-5000" {{ request('price_range') == '4001-5000' ? 'selected' : '' }}>$4001 - $5000</option>
-                            <option value="5001-6000" {{ request('price_range') == '5001-6000' ? 'selected' : '' }}>$5001 - $6000</option>
-                            <option value="6001-7000" {{ request('price_range') == '6001-7000' ? 'selected' : '' }}>$6001 - $7000</option>
-                            <option value="7001-8000" {{ request('price_range') == '7001-8000' ? 'selected' : '' }}>$7001 - $8000</option>
-                            <option value="8001-9000" {{ request('price_range') == '8001-9000' ? 'selected' : '' }}>$8001 - $9000</option>
-                            <option value="9001-10000" {{ request('price_range') == '9001-10000' ? 'selected' : '' }}>$9001 - $10000</option>
+                            <option value="0-1000" {{ request('price_range') == '0-1000' ? 'selected' : '' }}>0 - 1000</option>
+                            <option value="1001-2000" {{ request('price_range') == '1001-2000' ? 'selected' : '' }}>1001 - 2000</option>
+                            <option value="2001-3000" {{ request('price_range') == '2001-3000' ? 'selected' : '' }}>2001 - 3000</option>
+                            <option value="3001-4000" {{ request('price_range') == '3001-4000' ? 'selected' : '' }}>3001 - 4000</option>
+                            <option value="4001-5000" {{ request('price_range') == '4001-5000' ? 'selected' : '' }}>4001 - 5000</option>
+                            <option value="5001-6000" {{ request('price_range') == '5001-6000' ? 'selected' : '' }}>5001 - 6000</option>
+                            <option value="6001-7000" {{ request('price_range') == '6001-7000' ? 'selected' : '' }}>6001 - 7000</option>
+                            <option value="7001-8000" {{ request('price_range') == '7001-8000' ? 'selected' : '' }}>7001 - 8000</option>
+                            <option value="8001-9000" {{ request('price_range') == '8001-9000' ? 'selected' : '' }}>8001 - 9000</option>
+                            <option value="9001-10000" {{ request('price_range') == '9001-10000' ? 'selected' : '' }}>9001 - 10000</option>
                         </select>
                         @if(request('price_range'))
                             <a href="{{ route('home', array_merge(request()->except('price_range'), ['page' => null])) }}" class="btn btn-outline-secondary">
