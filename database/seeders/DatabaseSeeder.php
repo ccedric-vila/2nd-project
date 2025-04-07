@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             ReviewsTableSeeder::class,
             SalesTableSeeder::class,
             CartTableSeeder::class,
+            ProductImagesSeeder::class
             // Add other seeders if needed
         ]);
     }

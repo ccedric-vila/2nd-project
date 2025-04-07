@@ -50,7 +50,7 @@ class UsersTableSeeder extends Seeder
         $users = [
             [
                 'name' => 'Juan Dela Cruz',
-                'email' => 'juan.delacruz@example.com',
+                'email' => 'juan.delacruz@gmail.com',
                 'password' => Hash::make('Password123!'),
                 'role' => 'user',
                 'age' => 28,
@@ -61,7 +61,7 @@ class UsersTableSeeder extends Seeder
             ],
             [
                 'name' => 'Maria Santos',
-                'email' => 'maria.santos@example.com',
+                'email' => 'maria.santos@gmail.com',
                 'password' => Hash::make('Password123!'),
                 'role' => 'user',
                 'age' => 25,
@@ -72,7 +72,7 @@ class UsersTableSeeder extends Seeder
             ],
             [
                 'name' => 'Alex Reyes',
-                'email' => 'alex.reyes@example.com',
+                'email' => 'alex.reyes@gmail.com',
                 'password' => Hash::make('Password123!'),
                 'role' => 'user',
                 'age' => 30,
